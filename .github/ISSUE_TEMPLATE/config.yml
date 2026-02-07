@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability (Private)
+    url: https://github.com/rotcsgame/seksbot/security/advisories/new
+    about: Report security vulnerabilities privately through GitHub Security Advisories
+  - name: Discussions
+    url: https://github.com/rotcsgame/seksbot/discussions
+    about: Ask questions, share ideas, or discuss features

@@ -1,0 +1,52 @@
+<svg width="1280" height="640" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d1117"/>
+      <stop offset="100%" style="stop-color:#161b22"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#58a6ff"/>
+      <stop offset="100%" style="stop-color:#1f6feb"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#30363d" stroke-width="0.5"/>
+  </pattern>
+  <rect width="1280" height="640" fill="url(#grid)" opacity="0.3"/>
+  
+  <!-- Shield icon -->
+  <g transform="translate(540, 120)">
+    <path d="M100 0 L200 40 L200 120 Q200 200 100 240 Q0 200 0 120 L0 40 Z" 
+          fill="url(#shield)" opacity="0.9"/>
+    <path d="M100 30 L170 60 L170 120 Q170 180 100 210 Q30 180 30 120 L30 60 Z" 
+          fill="#0d1117"/>
+    <!-- Lock icon inside shield -->
+    <rect x="75" y="100" width="50" height="40" rx="5" fill="#58a6ff"/>
+    <rect x="85" y="85" width="30" height="25" rx="15" fill="none" stroke="#58a6ff" stroke-width="6"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="640" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="#f0f6fc" text-anchor="middle">
+    SEKSBOT
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="640" y="480" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#8b949e" text-anchor="middle">
+    Secure Execution Kernel Shell Bot
+  </text>
+  
+  <!-- Tagline -->
+  <text x="640" y="530" font-family="system-ui, -apple-system, sans-serif" font-size="22" fill="#58a6ff" text-anchor="middle">
+    Security-hardened AI agent • Credential isolation • Template-based execution
+  </text>
+  
+  <!-- GitHub corner hint -->
+  <text x="1240" y="600" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#484f58" text-anchor="end">
+    github.com/rotcsgame/seksbot
+  </text>
+</svg>
