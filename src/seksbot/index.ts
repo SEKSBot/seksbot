@@ -33,6 +33,23 @@ export {
   getDefaultSecurityPolicy,
 } from "./security-config.js";
 
+// Re-export exec hardening
+export {
+  // Types
+  type ExecMode,
+  type ExecRequest,
+  type ExecResult,
+  type CommandClassification,
+  type SecureExecOptions,
+  type SecureExecResult,
+  
+  // Functions
+  classifyCommand,
+  evaluateExecRequest,
+  secureExec,
+  executeTemplate,
+} from "./exec-hardening.js";
+
 // Re-export credential broker
 export {
   // Types
