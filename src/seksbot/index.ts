@@ -50,6 +50,26 @@ export {
   executeTemplate,
 } from "./exec-hardening.js";
 
+// Re-export exec integration
+export {
+  // Functions
+  enableSeksbot,
+  disableSeksbot,
+  isSeksEnabled,
+  getCurrentPolicy,
+  processExecRequest,
+  secureExecWrapper,
+  secureTemplateExec,
+  beforeExec,
+  afterExec,
+  formatTemplateSuggestion,
+  
+  // Types
+  type ExecGatewayRequest,
+  type ExecGatewayResult,
+  type SecureExecWrapperOptions,
+} from "./exec-integration.js";
+
 // Re-export credential broker
 export {
   // Types

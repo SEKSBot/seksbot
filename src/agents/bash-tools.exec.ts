@@ -56,6 +56,15 @@ import { getShellConfig, sanitizeBinaryOutput } from "./shell-utils.js";
 import { callGatewayTool } from "./tools/gateway.js";
 import { listNodes, resolveNodeIdFromList } from "./tools/nodes-utils.js";
 
+// Seksbot security layer integration
+import {
+  beforeExec,
+  afterExec,
+  isSeksEnabled,
+  getCurrentPolicy,
+  formatTemplateSuggestion,
+} from "../seksbot/exec-integration.js";
+
 // Security: Blocklist of environment variables that could alter execution flow
 // or inject code when running on non-sandboxed hosts (Gateway/Node).
 const DANGEROUS_HOST_ENV_VARS = new Set([
@@ -849,6 +858,24 @@ export function createExecTool(
         throw new Error("Provide a command to start.");
       }
 
+      // Seksbot security check (early exit if denied)
+      const configuredHost = defaults?.host ?? "sandbox";
+      const requestedHostForSeks = normalizeExecHost(params.host) ?? configuredHost;
+      const seksCheckResult = beforeExec({
+        command: params.command,
+        cwd: params.workdir?.trim() || defaults?.cwd || process.cwd(),
+        env: params.env,
+        host: requestedHostForSeks,
+        agentId,
+      });
+      if (seksCheckResult) {
+        const suggestion = formatTemplateSuggestion(params.command);
+        const message = suggestion 
+          ? `${seksCheckResult}\n\n${suggestion}`
+          : seksCheckResult;
+        throw new Error(message);
+      }
+
       const maxOutput = DEFAULT_MAX_OUTPUT;
       const pendingMaxOutput = DEFAULT_PENDING_MAX_OUTPUT;
       const warnings: string[] = [];
@@ -1597,18 +1624,20 @@ export function createExecTool(
               reject(new Error(outcome.reason ?? "Command failed."));
               return;
             }
+            // Apply seksbot output scrubbing to remove any leaked credentials
+            const scrubbedOutput = afterExec(outcome.aggregated || "");
             resolve({
               content: [
                 {
                   type: "text",
-                  text: `${getWarningText()}${outcome.aggregated || "(no output)"}`,
+                  text: `${getWarningText()}${scrubbedOutput || "(no output)"}`,
                 },
               ],
               details: {
                 status: "completed",
                 exitCode: outcome.exitCode ?? 0,
                 durationMs: outcome.durationMs,
-                aggregated: outcome.aggregated,
+                aggregated: scrubbedOutput,
                 cwd: run.session.cwd,
               },
             });
