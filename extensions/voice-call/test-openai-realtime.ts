@@ -93,6 +93,10 @@ const server = http.createServer(async (req, res) => {
     ].join("\r\n");
 
     try {
+      console.log(`📤 Requesting session from OpenAI for ${agent}...`);
+      console.log(`   Model: ${sessionConfig.model}`);
+      console.log(`   Voice: ${sessionConfig.voice}`);
+      
       const response = await fetch("https://api.openai.com/v1/realtime/calls", {
         method: "POST",
         headers: {
@@ -102,16 +106,19 @@ const server = http.createServer(async (req, res) => {
         body: formBody,
       });
 
+      console.log(`📥 OpenAI response status: ${response.status}`);
+
       if (!response.ok) {
         const error = await response.text();
-        console.error("OpenAI error:", error);
-        res.writeHead(response.status);
+        console.error("❌ OpenAI error:", error);
+        res.writeHead(response.status, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "OpenAI session failed", details: error }));
         return;
       }
 
       const sdpAnswer = await response.text();
       console.log(`✅ Session created for ${agent}`);
+      console.log(`   SDP answer length: ${sdpAnswer.length} bytes`);
       res.writeHead(200, { "Content-Type": "application/sdp" });
       res.end(sdpAnswer);
     } catch (err) {

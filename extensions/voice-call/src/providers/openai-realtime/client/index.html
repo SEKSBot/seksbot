@@ -286,6 +286,14 @@
           iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         });
 
+        // Log connection state changes for debugging
+        peerConnection.oniceconnectionstatechange = () => {
+          console.log('ICE state:', peerConnection.iceConnectionState);
+        };
+        peerConnection.onconnectionstatechange = () => {
+          console.log('Connection state:', peerConnection.connectionState);
+        };
+
         // Set up audio element for remote audio
         audioElement = document.createElement('audio');
         audioElement.autoplay = true;
