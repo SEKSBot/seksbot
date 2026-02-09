@@ -10,6 +10,7 @@ import { TelnyxProvider } from "./providers/telnyx.js";
 import { TwilioProvider } from "./providers/twilio.js";
 import { LiveKitProvider } from "./providers/livekit/provider.js";
 import { AgentWorker, createAgentWorker } from "./providers/livekit/agent-worker.js";
+import { OpenAIRealtimeProvider } from "./providers/openai-realtime/provider.js";
 import { createTelephonyTtsProvider } from "./telephony-tts.js";
 import { startTunnel, type TunnelResult } from "./tunnel.js";
 import {
@@ -100,6 +101,14 @@ function resolveProvider(config: VoiceCallConfig): VoiceCallProvider {
         apiSecret: config.livekit.apiSecret,
         roomPrefix: config.livekit.roomPrefix,
         maxParticipants: config.livekit.maxParticipants,
+      });
+    case "openai-realtime":
+      return new OpenAIRealtimeProvider({
+        apiKey: config.openaiRealtime?.apiKey,
+        model: config.openaiRealtime?.model,
+        voice: config.openaiRealtime?.voice,
+        instructions: config.openaiRealtime?.instructions,
+        turnDetection: config.openaiRealtime?.turnDetection,
       });
     case "mock":
       return new MockProvider();

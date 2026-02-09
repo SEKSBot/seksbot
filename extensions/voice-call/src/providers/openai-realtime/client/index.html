@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seksbot Voice (OpenAI Realtime)</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --primary: #10b981;
+      --secondary: #0f3460;
+      --text: #eee;
+      --text-muted: #888;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: var(--bg);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--surface);
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      border: 3px solid var(--secondary);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .avatar.speaking {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .avatar.listening {
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .status {
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .status.connected {
+      color: var(--primary);
+    }
+
+    .status.error {
+      color: #ef4444;
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .call-btn {
+      background: var(--primary);
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+    }
+
+    .call-btn.connected {
+      background: #ef4444;
+    }
+
+    .mute-btn {
+      background: var(--surface);
+      color: var(--text);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+
+    .mute-btn.muted {
+      background: #ef4444;
+    }
+
+    .agent-select {
+      margin-bottom: 1.5rem;
+    }
+
+    .agent-select select {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--secondary);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .transcript {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--surface);
+      border-radius: 0.5rem;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+
+    .transcript-entry {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+    }
+
+    .transcript-entry.user {
+      background: var(--secondary);
+    }
+
+    .transcript-entry.agent {
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    .transcript-entry .speaker {
+      font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Seksbot Voice</h1>
+    <p class="subtitle">Powered by OpenAI Realtime</p>
+    <span class="badge">Direct WebRTC</span>
+
+    <div class="agent-select">
+      <select id="agent-select">
+        <option value="annie">🌙 Annie</option>
+        <option value="siofra">🌿 Síofra</option>
+        <option value="aeon">⚡ Aeon</option>
+      </select>
+    </div>
+
+    <div class="avatar" id="avatar">🌙</div>
+
+    <div class="status" id="status">Ready to connect</div>
+
+    <div class="controls">
+      <button class="mute-btn" id="mute-btn" disabled title="Mute">🎤</button>
+      <button class="call-btn" id="call-btn" title="Start call">📞</button>
+    </div>
+
+    <div class="transcript" id="transcript" style="display: none;"></div>
+  </div>
+
+  <script>
+    const avatar = document.getElementById('avatar');
+    const status = document.getElementById('status');
+    const callBtn = document.getElementById('call-btn');
+    const muteBtn = document.getElementById('mute-btn');
+    const transcript = document.getElementById('transcript');
+    const agentSelect = document.getElementById('agent-select');
+
+    const agentEmojis = {
+      annie: '🌙',
+      siofra: '🌿',
+      aeon: '⚡',
+    };
+
+    let peerConnection = null;
+    let dataChannel = null;
+    let localStream = null;
+    let audioElement = null;
+    let connected = false;
+    let muted = false;
+
+    // Update avatar when agent changes
+    agentSelect.addEventListener('change', () => {
+      if (!connected) {
+        avatar.textContent = agentEmojis[agentSelect.value] || '🤖';
+      }
+    });
+
+    // Call button
+    callBtn.addEventListener('click', async () => {
+      if (connected) {
+        await disconnect();
+      } else {
+        await connect();
+      }
+    });
+
+    // Mute button
+    muteBtn.addEventListener('click', () => {
+      if (localStream) {
+        muted = !muted;
+        localStream.getAudioTracks().forEach(track => {
+          track.enabled = !muted;
+        });
+        muteBtn.textContent = muted ? '🔇' : '🎤';
+        muteBtn.classList.toggle('muted', muted);
+      }
+    });
+
+    async function connect() {
+      try {
+        setStatus('Connecting...', '');
+        const agent = agentSelect.value;
+
+        // Create peer connection
+        peerConnection = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        });
+
+        // Set up audio element for remote audio
+        audioElement = document.createElement('audio');
+        audioElement.autoplay = true;
+        peerConnection.ontrack = (e) => {
+          audioElement.srcObject = e.streams[0];
+          avatar.classList.add('speaking');
+        };
+
+        // Get local audio
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        localStream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream);
+        });
+
+        // Create data channel for events
+        dataChannel = peerConnection.createDataChannel('oai-events');
+        dataChannel.onopen = () => {
+          console.log('Data channel open');
+        };
+        dataChannel.onmessage = (e) => {
+          handleRealtimeEvent(JSON.parse(e.data));
+        };
+
+        // Create offer
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        // Wait for ICE gathering
+        await waitForIceGathering(peerConnection);
+
+        // Send to server (unified interface)
+        const response = await fetch(`/voice/realtime/session?agent=${agent}`, {
+          method: 'POST',
+          body: peerConnection.localDescription.sdp,
+          headers: {
+            'Content-Type': 'application/sdp',
+          },
+        });
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to create session');
+        }
+
+        // Set remote description
+        const sdpAnswer = await response.text();
+        await peerConnection.setRemoteDescription({
+          type: 'answer',
+          sdp: sdpAnswer,
+        });
+
+        connected = true;
+        setStatus('Connected', 'connected');
+        callBtn.classList.add('connected');
+        callBtn.textContent = '📴';
+        muteBtn.disabled = false;
+        transcript.style.display = 'block';
+        avatar.classList.add('listening');
+
+      } catch (err) {
+        console.error('Connection error:', err);
+        setStatus(`Error: ${err.message}`, 'error');
+        await disconnect();
+      }
+    }
+
+    async function disconnect() {
+      if (dataChannel) {
+        dataChannel.close();
+        dataChannel = null;
+      }
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      if (audioElement) {
+        audioElement.srcObject = null;
+        audioElement = null;
+      }
+
+      connected = false;
+      muted = false;
+      setStatus('Disconnected', '');
+      callBtn.classList.remove('connected');
+      callBtn.textContent = '📞';
+      muteBtn.disabled = true;
+      muteBtn.textContent = '🎤';
+      muteBtn.classList.remove('muted');
+      avatar.classList.remove('speaking', 'listening');
+    }
+
+    function waitForIceGathering(pc) {
+      return new Promise((resolve) => {
+        if (pc.iceGatheringState === 'complete') {
+          resolve();
+          return;
+        }
+        const checkState = () => {
+          if (pc.iceGatheringState === 'complete') {
+            pc.removeEventListener('icegatheringstatechange', checkState);
+            resolve();
+          }
+        };
+        pc.addEventListener('icegatheringstatechange', checkState);
+        // Timeout fallback
+        setTimeout(resolve, 2000);
+      });
+    }
+
+    function handleRealtimeEvent(event) {
+      console.log('Realtime event:', event);
+
+      switch (event.type) {
+        case 'input_audio_buffer.speech_started':
+          avatar.classList.add('listening');
+          avatar.classList.remove('speaking');
+          break;
+
+        case 'input_audio_buffer.speech_stopped':
+          avatar.classList.remove('listening');
+          break;
+
+        case 'response.audio.started':
+          avatar.classList.add('speaking');
+          break;
+
+        case 'response.audio.done':
+          avatar.classList.remove('speaking');
+          avatar.classList.add('listening');
+          break;
+
+        case 'conversation.item.input_audio_transcription.completed':
+          if (event.transcript) {
+            addTranscript('You', event.transcript);
+          }
+          break;
+
+        case 'response.audio_transcript.done':
+          if (event.transcript) {
+            addTranscript('Agent', event.transcript);
+          }
+          break;
+
+        case 'error':
+          console.error('Realtime error:', event.error);
+          setStatus(`Error: ${event.error?.message || 'Unknown error'}`, 'error');
+          break;
+      }
+    }
+
+    function setStatus(text, className) {
+      status.textContent = text;
+      status.className = 'status ' + className;
+    }
+
+    function addTranscript(speaker, text) {
+      const isAgent = speaker.toLowerCase() !== 'you';
+      const entry = document.createElement('div');
+      entry.className = `transcript-entry ${isAgent ? 'agent' : 'user'}`;
+      entry.innerHTML = `
+        <div class="speaker">${speaker}</div>
+        <div>${text}</div>
+      `;
+      transcript.appendChild(entry);
+      transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', disconnect);
+  </script>
+</body>
+</html>

@@ -78,6 +78,32 @@ export const LiveKitConfigSchema = z
   .strict();
 export type LiveKitConfig = z.infer<typeof LiveKitConfigSchema>;
 
+export const OpenAIRealtimeConfigSchema = z
+  .object({
+    /** OpenAI API key (defaults to OPENAI_API_KEY env) */
+    apiKey: z.string().min(1).optional(),
+    /** Model to use (default: gpt-4o-realtime) */
+    model: z.string().min(1).default("gpt-4o-realtime"),
+    /** Voice for TTS output */
+    voice: z
+      .enum(["alloy", "echo", "fable", "onyx", "nova", "shimmer", "marin"])
+      .default("marin"),
+    /** System instructions for the model */
+    instructions: z.string().optional(),
+    /** Turn detection settings */
+    turnDetection: z
+      .object({
+        type: z.enum(["server_vad", "none"]).default("server_vad"),
+        threshold: z.number().min(0).max(1).default(0.5),
+        prefixPaddingMs: z.number().int().positive().default(300),
+        silenceDurationMs: z.number().int().positive().default(500),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+export type OpenAIRealtimeConfig = z.infer<typeof OpenAIRealtimeConfigSchema>;
+
 // -----------------------------------------------------------------------------
 // STT/TTS Configuration
 // -----------------------------------------------------------------------------
@@ -322,8 +348,8 @@ export const VoiceCallConfigSchema = z
     /** Enable voice call functionality */
     enabled: z.boolean().default(false),
 
-    /** Active provider (telnyx, twilio, plivo, livekit, or mock) */
-    provider: z.enum(["telnyx", "twilio", "plivo", "livekit", "mock"]).optional(),
+    /** Active provider */
+    provider: z.enum(["telnyx", "twilio", "plivo", "livekit", "openai-realtime", "mock"]).optional(),
 
     /** Telnyx-specific configuration */
     telnyx: TelnyxConfigSchema.optional(),
@@ -336,6 +362,9 @@ export const VoiceCallConfigSchema = z
 
     /** LiveKit-specific configuration (WebRTC, browser-based) */
     livekit: LiveKitConfigSchema.optional(),
+
+    /** OpenAI Realtime configuration (direct voice-to-voice) */
+    openaiRealtime: OpenAIRealtimeConfigSchema.optional(),
 
     /** Phone number to call from (E.164) */
     fromNumber: E164Schema.optional(),
