@@ -8,6 +8,8 @@ import { MockProvider } from "./providers/mock.js";
 import { PlivoProvider } from "./providers/plivo.js";
 import { TelnyxProvider } from "./providers/telnyx.js";
 import { TwilioProvider } from "./providers/twilio.js";
+import { LiveKitProvider } from "./providers/livekit/provider.js";
+import { AgentWorker, createAgentWorker } from "./providers/livekit/agent-worker.js";
 import { createTelephonyTtsProvider } from "./telephony-tts.js";
 import { startTunnel, type TunnelResult } from "./tunnel.js";
 import {
@@ -23,6 +25,8 @@ export type VoiceCallRuntime = {
   webhookServer: VoiceCallWebhookServer;
   webhookUrl: string;
   publicUrl: string | null;
+  /** LiveKit agent worker (only present when provider=livekit) */
+  agentWorker?: AgentWorker;
   stop: () => Promise<void>;
 };
 
@@ -86,6 +90,17 @@ function resolveProvider(config: VoiceCallConfig): VoiceCallProvider {
           webhookSecurity: config.webhookSecurity,
         },
       );
+    case "livekit":
+      if (!config.livekit?.wsUrl || !config.livekit?.apiKey || !config.livekit?.apiSecret) {
+        throw new Error("LiveKit requires wsUrl, apiKey, and apiSecret");
+      }
+      return new LiveKitProvider({
+        wsUrl: config.livekit.wsUrl,
+        apiKey: config.livekit.apiKey,
+        apiSecret: config.livekit.apiSecret,
+        roomPrefix: config.livekit.roomPrefix,
+        maxParticipants: config.livekit.maxParticipants,
+      });
     case "mock":
       return new MockProvider();
     default:
@@ -186,7 +201,55 @@ export async function createVoiceCallRuntime(params: {
 
   manager.initialize(provider, webhookUrl);
 
+  // Initialize LiveKit agent worker if using LiveKit provider
+  let agentWorker: AgentWorker | undefined;
+  if (config.provider === "livekit" && config.livekit) {
+    try {
+      agentWorker = await createAgentWorker({
+        wsUrl: config.livekit.wsUrl!,
+        apiKey: config.livekit.apiKey!,
+        apiSecret: config.livekit.apiSecret!,
+        stt: {
+          provider: "openai-realtime",
+          apiKey: config.streaming?.openaiApiKey || process.env.OPENAI_API_KEY || "",
+          model: config.streaming?.sttModel,
+        },
+        synthesizeSpeech: ttsRuntime?.textToSpeechTelephony
+          ? async (text: string) => {
+              const result = await ttsRuntime.textToSpeechTelephony({
+                text,
+                cfg: coreConfig,
+              });
+              if (!result.success || !result.audioBuffer) {
+                throw new Error(result.error || "TTS failed");
+              }
+              return result.audioBuffer;
+            }
+          : undefined,
+        onUserSpeech: async (roomName, transcript, agentId) => {
+          // TODO: Wire this to seksbot session
+          // For now, return a placeholder response
+          log.info(`[voice-call] User said in ${roomName} (${agentId}): ${transcript}`);
+          return `I heard you say: "${transcript}". This is a placeholder response.`;
+        },
+        turnDetection: {
+          silenceMs: config.streaming?.silenceDurationMs,
+        },
+      });
+      log.info("[voice-call] LiveKit agent worker initialized");
+    } catch (err) {
+      log.error(
+        `[voice-call] Failed to initialize LiveKit agent worker: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
+  }
+
   const stop = async () => {
+    if (agentWorker) {
+      await agentWorker.stop();
+    }
     if (tunnelResult) {
       await tunnelResult.stop();
     }
@@ -207,6 +270,7 @@ export async function createVoiceCallRuntime(params: {
     webhookServer,
     webhookUrl,
     publicUrl,
+    agentWorker,
     stop,
   };
 }

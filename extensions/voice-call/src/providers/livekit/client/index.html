@@ -264,13 +264,15 @@
       try {
         setStatus('Connecting...', '');
 
-        // Get token from server
+        // Join room (creates room and triggers agent to join)
         const agent = agentSelect.value;
-        const response = await fetch(`/voice/token?agent=${agent}`);
+        const response = await fetch(`/voice/join?agent=${agent}&name=user-${Date.now()}`);
         if (!response.ok) {
-          throw new Error('Failed to get token');
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to join');
         }
         const { token, wsUrl, roomName } = await response.json();
+        window.currentRoomName = roomName;
 
         // Create room and connect
         room = new Room();
@@ -315,6 +317,16 @@
     }
 
     async function disconnect() {
+      // Notify server to cleanup
+      if (window.currentRoomName) {
+        try {
+          await fetch(`/voice/leave?room=${encodeURIComponent(window.currentRoomName)}`);
+        } catch (e) {
+          console.warn('Failed to notify leave:', e);
+        }
+        window.currentRoomName = null;
+      }
+
       if (room) {
         await room.disconnect();
         room = null;
