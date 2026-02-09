@@ -10,6 +10,10 @@ import type { TwilioProvider } from "./providers/twilio.js";
 import type { NormalizedEvent, WebhookContext } from "./types.js";
 import { MediaStreamHandler } from "./media-stream.js";
 import { OpenAIRealtimeSTTProvider } from "./providers/stt-openai-realtime.js";
+import { createOpenAIRealtimeHttpHandler } from "./providers/openai-realtime/http-handler.js";
+import { createLiveKitHttpHandler } from "./providers/livekit/http-handler.js";
+import type { OpenAIRealtimeProvider } from "./providers/openai-realtime/provider.js";
+import type { AgentWorker } from "./providers/livekit/agent-worker.js";
 
 const MAX_WEBHOOK_BODY_BYTES = 1024 * 1024;
 
@@ -27,11 +31,24 @@ export class VoiceCallWebhookServer {
   /** Media stream handler for bidirectional audio (when streaming enabled) */
   private mediaStreamHandler: MediaStreamHandler | null = null;
 
+  /** OpenAI Realtime HTTP handler */
+  private openaiRealtimeHandler:
+    | ((req: http.IncomingMessage, res: http.ServerResponse) => Promise<boolean>)
+    | null = null;
+
+  /** LiveKit HTTP handler */
+  private liveKitHandler:
+    | ((req: http.IncomingMessage, res: http.ServerResponse) => Promise<boolean>)
+    | null = null;
+
   constructor(
     config: VoiceCallConfig,
     manager: CallManager,
     provider: VoiceCallProvider,
     coreConfig?: CoreConfig,
+    options?: {
+      agentWorker?: AgentWorker;
+    },
   ) {
     this.config = config;
     this.manager = manager;
@@ -41,6 +58,33 @@ export class VoiceCallWebhookServer {
     // Initialize media stream handler if streaming is enabled
     if (config.streaming?.enabled) {
       this.initializeMediaStreaming();
+    }
+
+    // Initialize OpenAI Realtime handler if using that provider
+    if (config.provider === "openai-realtime") {
+      const realtimeProvider = provider as OpenAIRealtimeProvider;
+      this.openaiRealtimeHandler = createOpenAIRealtimeHttpHandler({
+        config: realtimeProvider.getConfig(),
+        apiKey: realtimeProvider.getApiKey(),
+        basePath: "/voice/realtime",
+      });
+      console.log("[voice-call] OpenAI Realtime HTTP handler initialized");
+    }
+
+    // Initialize LiveKit handler if using that provider
+    if (config.provider === "livekit" && config.livekit) {
+      this.liveKitHandler = createLiveKitHttpHandler({
+        livekit: {
+          wsUrl: config.livekit.wsUrl!,
+          apiKey: config.livekit.apiKey!,
+          apiSecret: config.livekit.apiSecret!,
+          roomPrefix: config.livekit.roomPrefix,
+          maxParticipants: config.livekit.maxParticipants,
+        },
+        basePath: "/voice",
+        agentWorker: options?.agentWorker,
+      });
+      console.log("[voice-call] LiveKit HTTP handler initialized");
     }
   }
 
@@ -225,14 +269,26 @@ export class VoiceCallWebhookServer {
   ): Promise<void> {
     const url = new URL(req.url || "/", `http://${req.headers.host}`);
 
-    // Check path
+    // Try OpenAI Realtime handler first
+    if (this.openaiRealtimeHandler && url.pathname.startsWith("/voice/realtime")) {
+      const handled = await this.openaiRealtimeHandler(req, res);
+      if (handled) return;
+    }
+
+    // Try LiveKit handler
+    if (this.liveKitHandler && url.pathname.startsWith("/voice")) {
+      const handled = await this.liveKitHandler(req, res);
+      if (handled) return;
+    }
+
+    // Check path for regular webhooks
     if (!url.pathname.startsWith(webhookPath)) {
       res.statusCode = 404;
       res.end("Not Found");
       return;
     }
 
-    // Only accept POST
+    // Only accept POST for webhooks
     if (req.method !== "POST") {
       res.statusCode = 405;
       res.end("Method Not Allowed");
