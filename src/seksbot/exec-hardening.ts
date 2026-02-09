@@ -67,27 +67,73 @@ export type ExecResult = {
  */
 const DANGEROUS_PATTERNS = [
   // Network exfiltration
-  /\bcurl\b.*(-d|--data|--upload)/i,
-  /\bwget\b.*--post/i,
-  /\bnc\b|\bnetcat\b/i,
+  /\bcurl\b.*(-d|--data|--upload|--post|--form|-F)/i,
+  /\bwget\b.*(--post|--body)/i,
+  /\bnc\b|\bnetcat\b|\bncat\b/i,
+  /\btelnet\b/i,
+  /\bsocat\b/i,
+  /\/dev\/tcp\//i,  // Bash TCP redirection
+  /\/dev\/udp\//i,  // Bash UDP redirection
   
   // Environment/credential exposure
-  /\benv\b|\bprintenv\b/,
-  /\becho\s+\$\w+/,
+  /\benv\b(?!\w)/,  // 'env' command but not 'environment'
+  /\bprintenv\b/,
+  /\bexport\b/,
+  /\bdeclare\s+-x\b/,
+  /\bset\b(?:\s|$)/,  // 'set' command
+  /\becho\s+\$\w+/,  // Echo with variable
+  /\becho\s+\$\{/,   // Echo with ${var}
+  /\bprintf\b.*\$\w+/,  // Printf with variable
   /\bcat\b.*\.env/,
-  /\bcat\b.*(credentials|secrets|password|token|key)/i,
+  /\bcat\b.*\.(credentials|secrets|password|token|key|pem|p12|pfx)/i,
+  /\bcat\b.*\/\.aws\//i,  // AWS credentials
+  /\bcat\b.*\/\.ssh\//i,  // SSH keys
+  /\bcat\b.*\/\.netrc/i,  // Netrc
+  /\bcat\b.*\/\.pgpass/i, // PostgreSQL passwords
+  /\bcat\b.*\/etc\/shadow/i,
+  /\bcat\b.*\/etc\/passwd/i,
   
   // System modification
   /\brm\s+-rf\s+\//,
-  /\bchmod\s+777\b/,
+  /\bchmod\s+(777|\+s)/,  // World writable or setuid
   /\bchown\b.*root/,
+  /\bsudo\b/,
   
-  // Code execution
+  // Code execution / shell spawning
   /\beval\b/,
-  /\bsh\s+-c\b/,
-  /\bbash\s+-c\b/,
+  /\bsh\s+-[ci]/,
+  /\bbash\s+-[ci]/,
+  /\bzsh\s+-[ci]/,
+  /\/bin\/sh\b/,
+  /\/bin\/bash\b/,
   /`[^`]+`/,  // Command substitution
-  /\$\([^)]+\)/,  // Command substitution
+  /\$\([^)]+\)/,  // Command substitution $(...)
+  
+  // Script execution
+  /\bpython[23]?\s+-c\b/i,
+  /\bnode\s+-e\b/i,
+  /\bperl\s+-e\b/i,
+  /\bruby\s+-e\b/i,
+  /\bphp\s+-r\b/i,
+  
+  // Piping/chaining to dangerous commands
+  /\|\s*(nc|netcat|curl|wget|bash|sh)/i,
+  /;\s*(curl|wget|nc|bash|sh)/i,
+  /&&\s*(curl|wget|nc|bash|sh)/i,
+  /\|\|\s*(curl|wget|nc|bash|sh)/i,
+  
+  // File exfiltration patterns
+  /\bxxd\b.*\bdig\b/i,  // Hex encode + DNS exfil
+  /\bbase64\b.*\b(curl|wget|nc)/i,  // Base64 + network exfil
+  /\bxargs\b.*\bdig\b/i,  // DNS exfiltration
+  
+  // Reverse shells
+  />(&|\s)\s*\/dev\/tcp\//i,  // Redirect to TCP
+  /mkfifo\b/i,  // Named pipe for reverse shells
+  
+  // Privilege escalation recon
+  /find\b.*-perm\s+-[24]000/i,  // SUID/SGID finding
+  /\bcat\b.*\/etc\/sudoers/i,
 ];
 
 /**

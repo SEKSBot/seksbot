@@ -122,8 +122,18 @@ const scrubRegistry = new Map<string, { name: string; value: string }>();
 
 /**
  * Register a secret value for output scrubbing
+ * Can be called with just the value (name defaults to "REDACTED")
+ * or with both name and value for better labeling
  */
-export function registerForScrubbing(name: string, value: string): void {
+export function registerForScrubbing(valueOrName: string, maybeValue?: string): void {
+  const name = maybeValue !== undefined ? valueOrName : "REDACTED";
+  const value = maybeValue !== undefined ? maybeValue : valueOrName;
+  
+  // Skip empty or very short secrets (to avoid false positives)
+  if (!value || value.length < 2) {
+    return;
+  }
+  
   const key = value.toLowerCase();
   scrubRegistry.set(key, { name, value });
   
@@ -134,6 +144,16 @@ export function registerForScrubbing(name: string, value: string): void {
   // And hex encoded version
   const hex = Buffer.from(value).toString("hex");
   scrubRegistry.set(hex.toLowerCase(), { name: `${name}:hex`, value: hex });
+  
+  // URL encoded version for special characters
+  try {
+    const urlEncoded = encodeURIComponent(value);
+    if (urlEncoded !== value) {
+      scrubRegistry.set(urlEncoded.toLowerCase(), { name: `${name}:url`, value: urlEncoded });
+    }
+  } catch {
+    // Ignore encoding errors
+  }
 }
 
 /**
@@ -210,23 +230,40 @@ const BLOCKED_HEADERS = new Set([
   "bearer",
   "cookie",
   "set-cookie",
+  "proxy-authorization",
 ]);
 
 /**
- * Validate that request headers don't contain auth headers
+ * Validate that request headers don't contain auth headers or injection attempts
  */
 export function validateHeaders(
   headers: Record<string, string>,
-): { ok: true } | { ok: false; error: string } {
-  for (const key of Object.keys(headers)) {
-    if (BLOCKED_HEADERS.has(key.toLowerCase())) {
-      return {
-        ok: false,
-        error: `Security violation: Header '${key}' must be injected by broker`,
-      };
+): { valid: true; blocked: string[] } | { valid: false; blocked: string[]; error: string } {
+  const blocked: string[] = [];
+  
+  for (const [key, value] of Object.entries(headers)) {
+    const lowerKey = key.toLowerCase();
+    
+    // Check for blocked header names
+    if (BLOCKED_HEADERS.has(lowerKey)) {
+      blocked.push(lowerKey);
+    }
+    
+    // Check for header injection attempts (CRLF injection)
+    if (value.includes("\r") || value.includes("\n") || value.includes("\x00")) {
+      blocked.push(key);
     }
   }
-  return { ok: true };
+  
+  if (blocked.length > 0) {
+    return {
+      valid: false,
+      blocked,
+      error: `Security violation: Blocked headers detected: ${blocked.join(", ")}`,
+    };
+  }
+  
+  return { valid: true, blocked: [] };
 }
 
 // ============================================================================
@@ -336,22 +373,60 @@ class StubBrokerClient implements BrokerClient {
  * Check if a URL is allowed based on allowlist patterns
  */
 export function isUrlAllowed(url: string, allowlist?: string[]): boolean {
-  if (!allowlist || allowlist.length === 0) {
-    return true; // No allowlist = all allowed
+  // Empty string is never allowed
+  if (!url || url.trim() === "") {
+    return false;
+  }
+  
+  // No allowlist = all allowed (undefined means not configured)
+  if (allowlist === undefined) {
+    return true;
+  }
+  
+  // Empty array = nothing allowed
+  if (allowlist.length === 0) {
+    return false;
   }
   
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.toLowerCase();
+    const protocol = parsed.protocol.toLowerCase();
+    
+    // Only allow http and https
+    if (protocol !== "http:" && protocol !== "https:") {
+      return false;
+    }
+    
+    // Block raw IP addresses (must use hostnames)
+    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+      // Exception for localhost
+      if (host === "127.0.0.1") {
+        return allowlist.some(p => p === "localhost" || p === "127.0.0.1");
+      }
+      return false;
+    }
+    
+    // Block IPv6 addresses
+    if (host.startsWith("[") || host.includes(":")) {
+      return false;
+    }
     
     for (const pattern of allowlist) {
-      // Wildcard matching
-      if (pattern.startsWith("*.")) {
-        const suffix = pattern.slice(2).toLowerCase();
-        if (host.endsWith(suffix) || host === suffix.slice(1)) {
+      const lowerPattern = pattern.toLowerCase();
+      
+      // Wildcard matching: *.example.com
+      if (lowerPattern.startsWith("*.")) {
+        const suffix = lowerPattern.slice(1); // Keep the dot: .example.com
+        // Must match as a subdomain, not just ending with the string
+        if (host.endsWith(suffix) && host.length > suffix.length) {
           return true;
         }
-      } else if (host === pattern.toLowerCase()) {
+        // Also match exact domain: *.example.com matches example.com
+        if (host === lowerPattern.slice(2)) {
+          return true;
+        }
+      } else if (host === lowerPattern) {
         return true;
       }
     }
