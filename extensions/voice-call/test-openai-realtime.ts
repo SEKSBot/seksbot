@@ -66,14 +66,12 @@ const server = http.createServer(async (req, res) => {
     const sessionConfig = {
       type: "realtime",
       model: "gpt-4o-realtime-preview",
-      voice: "shimmer", // Good female voice
-      instructions: agentInstructions[agent] || agentInstructions.annie,
-      turn_detection: {
-        type: "server_vad",
-        threshold: 0.5,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500,
+      audio: {
+        output: {
+          voice: "shimmer",
+        },
       },
+      instructions: agentInstructions[agent] || agentInstructions.annie,
     };
 
     // Create multipart form
