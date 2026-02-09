@@ -68,7 +68,7 @@ async function withTempHome<T>(fn: (home: string) => Promise<T>): Promise<T> {
       vi.mocked(abortEmbeddedPiRun).mockClear();
       return await fn(home);
     },
-    { prefix: "openclaw-triggers-" },
+    { prefix: "seksbot-triggers-" },
   );
 }
 
@@ -77,7 +77,7 @@ function makeCfg(home: string) {
     agents: {
       defaults: {
         model: "anthropic/claude-opus-4-5",
-        workspace: join(home, "openclaw"),
+        workspace: join(home, "seksbot"),
       },
     },
     channels: {
@@ -141,7 +141,7 @@ describe("trigger handling", () => {
           agents: {
             defaults: {
               model: "anthropic/claude-opus-4-5",
-              workspace: join(home, "openclaw"),
+              workspace: join(home, "seksbot"),
             },
           },
           channels: {
@@ -187,7 +187,7 @@ describe("trigger handling", () => {
           agents: {
             defaults: {
               model: "anthropic/claude-opus-4-5",
-              workspace: join(home, "openclaw"),
+              workspace: join(home, "seksbot"),
             },
           },
           channels: {
@@ -196,7 +196,7 @@ describe("trigger handling", () => {
             },
           },
           session: {
-            store: join(tmpdir(), `openclaw-session-test-${Date.now()}.json`),
+            store: join(tmpdir(), `seksbot-session-test-${Date.now()}.json`),
           },
         },
       );

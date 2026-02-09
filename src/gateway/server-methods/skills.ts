@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { seksbotConfig } from "../../config/config.js";
 import type { GatewayRequestHandlers } from "./types.js";
 import {
   listAgentIds,
@@ -22,7 +22,7 @@ import {
   validateSkillsUpdateParams,
 } from "../protocol/index.js";
 
-function listWorkspaceDirs(cfg: OpenClawConfig): string[] {
+function listWorkspaceDirs(cfg: seksbotConfig): string[] {
   const dirs = new Set<string>();
   const list = cfg.agents?.list;
   if (Array.isArray(list)) {
@@ -207,7 +207,7 @@ export const skillsHandlers: GatewayRequestHandlers = {
     }
     entries[p.skillKey] = current;
     skills.entries = entries;
-    const nextConfig: OpenClawConfig = {
+    const nextConfig: seksbotConfig = {
       ...cfg,
       skills,
     };

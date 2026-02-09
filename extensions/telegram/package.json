@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/telegram",
+  "name": "@seksbot/telegram",
   "version": "2026.2.9",
-  "description": "OpenClaw Telegram channel plugin",
+  "description": "seksbot Telegram channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

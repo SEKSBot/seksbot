@@ -4,7 +4,7 @@ If you believe you've found a security issue in OpenClaw, please report it priva
 
 ## Reporting
 
-For full reporting instructions - including which repo to report to and how - see our [Trust page](https://trust.openclaw.ai).
+For full reporting instructions - including which repo to report to and how - see our [Trust page](https://trust.seksbot.ai).
 
 Include: reproduction steps, impact assessment, and (if possible) a minimal PoC.
 
@@ -27,7 +27,7 @@ The best way to help the project right now is by sending PRs.
 
 For threat model + hardening guidance (including `openclaw security audit --deep` and `--fix`), see:
 
-- `https://docs.openclaw.ai/gateway/security`
+- `https://docs.seksbot.ai/gateway/security`
 
 ### Web Interface Safety
 

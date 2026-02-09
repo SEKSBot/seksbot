@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { RuntimeEnv } from "../../runtime.js";
-import { resolveOpenClawAgentDir } from "../../agents/agent-paths.js";
+import { resolveseksbotAgentDir } from "../../agents/agent-paths.js";
 import {
   resolveAgentDir,
   resolveAgentModelFallbacksOverride,
@@ -74,7 +74,7 @@ export async function modelsStatusCommand(
   }
   const cfg = loadConfig();
   const agentId = resolveKnownAgentId({ cfg, rawAgentId: opts.agent });
-  const agentDir = agentId ? resolveAgentDir(cfg, agentId) : resolveOpenClawAgentDir();
+  const agentDir = agentId ? resolveAgentDir(cfg, agentId) : resolveseksbotAgentDir();
   const agentModelPrimary = agentId ? resolveAgentModelPrimary(cfg, agentId) : undefined;
   const agentFallbacksOverride = agentId
     ? resolveAgentModelFallbacksOverride(cfg, agentId)
@@ -542,8 +542,8 @@ export async function modelsStatusCommand(
     for (const provider of missingProvidersInUse) {
       const hint =
         provider === "anthropic"
-          ? `Run \`claude setup-token\`, then \`${formatCliCommand("openclaw models auth setup-token")}\` or \`${formatCliCommand("openclaw configure")}\`.`
-          : `Run \`${formatCliCommand("openclaw configure")}\` or set an API key env var.`;
+          ? `Run \`claude setup-token\`, then \`${formatCliCommand("seksbot models auth setup-token")}\` or \`${formatCliCommand("seksbot configure")}\`.`
+          : `Run \`${formatCliCommand("seksbot configure")}\` or set an API key env var.`;
       runtime.log(`- ${theme.heading(provider)} ${hint}`);
     }
   }

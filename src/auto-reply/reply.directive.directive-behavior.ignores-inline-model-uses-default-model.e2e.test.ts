@@ -27,10 +27,10 @@ async function withTempHome<T>(fn: (home: string) => Promise<T>): Promise<T> {
     },
     {
       env: {
-        OPENCLAW_AGENT_DIR: (home) => path.join(home, ".openclaw", "agent"),
-        PI_CODING_AGENT_DIR: (home) => path.join(home, ".openclaw", "agent"),
+        SEKSBOT_AGENT_DIR: (home) => path.join(home, ".seksbot", "agent"),
+        PI_CODING_AGENT_DIR: (home) => path.join(home, ".seksbot", "agent"),
       },
-      prefix: "openclaw-reply-",
+      prefix: "seksbot-reply-",
     },
   );
 }
@@ -82,7 +82,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: { primary: "anthropic/claude-opus-4-5" },
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
               models: {
                 "anthropic/claude-opus-4-5": {},
                 "openai/gpt-4.1-mini": {},
@@ -132,7 +132,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: "anthropic/claude-opus-4-5",
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
             },
           },
           channels: { whatsapp: { allowFrom: ["*"] } },
@@ -169,7 +169,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: "anthropic/claude-opus-4-5",
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
             },
           },
           tools: {

@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/minimax-portal-auth",
+  "name": "@seksbot/minimax-portal-auth",
   "version": "2026.2.9",
-  "description": "OpenClaw MiniMax Portal OAuth provider plugin",
+  "description": "seksbot MiniMax Portal OAuth provider plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

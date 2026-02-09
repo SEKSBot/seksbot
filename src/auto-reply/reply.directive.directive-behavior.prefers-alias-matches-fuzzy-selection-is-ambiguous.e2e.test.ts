@@ -29,10 +29,10 @@ async function withTempHome<T>(fn: (home: string) => Promise<T>): Promise<T> {
     },
     {
       env: {
-        OPENCLAW_AGENT_DIR: (home) => path.join(home, ".openclaw", "agent"),
-        PI_CODING_AGENT_DIR: (home) => path.join(home, ".openclaw", "agent"),
+        SEKSBOT_AGENT_DIR: (home) => path.join(home, ".seksbot", "agent"),
+        PI_CODING_AGENT_DIR: (home) => path.join(home, ".seksbot", "agent"),
       },
-      prefix: "openclaw-reply-",
+      prefix: "seksbot-reply-",
     },
   );
 }
@@ -74,7 +74,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: { primary: "anthropic/claude-opus-4-5" },
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
               models: {
                 "anthropic/claude-opus-4-5": {},
                 "moonshot/kimi-k2-0905-preview": { alias: "Kimi" },
@@ -116,7 +116,7 @@ describe("directive behavior", () => {
     await withTempHome(async (home) => {
       vi.mocked(runEmbeddedPiAgent).mockReset();
       const storePath = path.join(home, "sessions.json");
-      const authDir = path.join(home, ".openclaw", "agents", "main", "agent");
+      const authDir = path.join(home, ".seksbot", "agents", "main", "agent");
       await fs.mkdir(authDir, { recursive: true, mode: 0o700 });
       await fs.writeFile(
         path.join(authDir, "auth-profiles.json"),
@@ -143,7 +143,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: { primary: "openai/gpt-4.1-mini" },
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
               models: {
                 "openai/gpt-4.1-mini": {},
                 "anthropic/claude-opus-4-5": { alias: "Opus" },
@@ -175,7 +175,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: { primary: "openai/gpt-4.1-mini" },
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
               models: {
                 "openai/gpt-4.1-mini": {},
                 "anthropic/claude-opus-4-5": { alias: "Opus" },
@@ -209,7 +209,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: { primary: "openai/gpt-4.1-mini" },
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
             },
           },
           tools: { elevated: { allowFrom: { whatsapp: ["*"] } } },
@@ -240,7 +240,7 @@ describe("directive behavior", () => {
           agents: {
             defaults: {
               model: { primary: "openai/gpt-4.1-mini" },
-              workspace: path.join(home, "openclaw"),
+              workspace: path.join(home, "seksbot"),
             },
           },
           channels: { whatsapp: { allowFrom: ["*"] } },

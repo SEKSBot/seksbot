@@ -1,12 +1,12 @@
-import type { OpenClawConfig, WizardPrompter } from "openclaw/plugin-sdk";
-import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "openclaw/plugin-sdk";
+import type { seksbotConfig, WizardPrompter } from "seksbot/plugin-sdk";
+import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "seksbot/plugin-sdk";
 
 type PromptAccountIdParams = {
-  cfg: OpenClawConfig;
+  cfg: seksbotConfig;
   prompter: WizardPrompter;
   label: string;
   currentId?: string;
-  listAccountIds: (cfg: OpenClawConfig) => string[];
+  listAccountIds: (cfg: seksbotConfig) => string[];
   defaultAccountId: string;
 };
 

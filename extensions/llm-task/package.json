@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/llm-task",
+  "name": "@seksbot/llm-task",
   "version": "2026.2.9",
-  "description": "OpenClaw JSON-only LLM task plugin",
+  "description": "seksbot JSON-only LLM task plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

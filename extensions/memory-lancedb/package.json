@@ -1,7 +1,7 @@
 {
-  "name": "@openclaw/memory-lancedb",
+  "name": "@seksbot/memory-lancedb",
   "version": "2026.2.9",
-  "description": "OpenClaw LanceDB-backed long-term memory plugin with auto-recall/capture",
+  "description": "seksbot LanceDB-backed long-term memory plugin with auto-recall/capture",
   "type": "module",
   "dependencies": {
     "@lancedb/lancedb": "^0.24.1",
@@ -9,9 +9,9 @@
     "openai": "^6.18.0"
   },
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

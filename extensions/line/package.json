@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/line",
+  "name": "@seksbot/line",
   "version": "2026.2.9",
-  "description": "OpenClaw LINE channel plugin",
+  "description": "seksbot LINE channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ],
@@ -21,7 +21,7 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@openclaw/line",
+      "npmSpec": "@seksbot/line",
       "localPath": "extensions/line",
       "defaultChoice": "npm"
     }

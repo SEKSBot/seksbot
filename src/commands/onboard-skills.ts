@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { seksbotConfig } from "../config/config.js";
 import type { RuntimeEnv } from "../runtime.js";
 import type { WizardPrompter } from "../wizard/prompts.js";
 import { installSkill } from "../agents/skills-install.js";
@@ -31,10 +31,10 @@ function formatSkillHint(skill: {
 }
 
 function upsertSkillEntry(
-  cfg: OpenClawConfig,
+  cfg: seksbotConfig,
   skillKey: string,
   patch: { apiKey?: string },
-): OpenClawConfig {
+): seksbotConfig {
   const entries = { ...cfg.skills?.entries };
   const existing = (entries[skillKey] as { apiKey?: string } | undefined) ?? {};
   entries[skillKey] = { ...existing, ...patch };
@@ -48,11 +48,11 @@ function upsertSkillEntry(
 }
 
 export async function setupSkills(
-  cfg: OpenClawConfig,
+  cfg: seksbotConfig,
   workspaceDir: string,
   runtime: RuntimeEnv,
   prompter: WizardPrompter,
-): Promise<OpenClawConfig> {
+): Promise<seksbotConfig> {
   const report = buildWorkspaceSkillStatus(workspaceDir, { config: cfg });
   const eligible = report.skills.filter((s) => s.eligible);
   const missing = report.skills.filter((s) => !s.eligible && !s.disabled && !s.blockedByAllowlist);
@@ -108,7 +108,7 @@ export async function setupSkills(
     options: resolveNodeManagerOptions(),
   })) as "npm" | "pnpm" | "bun";
 
-  let next: OpenClawConfig = {
+  let next: seksbotConfig = {
     ...cfg,
     skills: {
       ...cfg.skills,
@@ -176,9 +176,9 @@ export async function setupSkills(
         runtime.log(result.stdout.trim());
       }
       runtime.log(
-        `Tip: run \`${formatCliCommand("openclaw doctor")}\` to review skills + requirements.`,
+        `Tip: run \`${formatCliCommand("seksbot doctor")}\` to review skills + requirements.`,
       );
-      runtime.log("Docs: https://docs.openclaw.ai/skills");
+      runtime.log("Docs: https://docs.seksbot.ai/skills");
     }
   }
 

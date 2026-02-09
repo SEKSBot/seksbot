@@ -1,12 +1,12 @@
 ---
-summary: "CLI reference for `openclaw hooks` (agent hooks)"
+summary: "CLI reference for `seksbot hooks` (agent hooks)"
 read_when:
   - You want to manage agent hooks
   - You want to install or update hooks
 title: "hooks"
 ---
 
-# `openclaw hooks`
+# `seksbot hooks`
 
 Manage agent hooks (event-driven automations for commands like `/new`, `/reset`, and gateway startup).
 
@@ -18,7 +18,7 @@ Related:
 ## List All Hooks
 
 ```bash
-openclaw hooks list
+seksbot hooks list
 ```
 
 List all discovered hooks from workspace, managed, and bundled directories.
@@ -44,7 +44,7 @@ Ready:
 **Example (verbose):**
 
 ```bash
-openclaw hooks list --verbose
+seksbot hooks list --verbose
 ```
 
 Shows missing requirements for ineligible hooks.
@@ -52,7 +52,7 @@ Shows missing requirements for ineligible hooks.
 **Example (JSON):**
 
 ```bash
-openclaw hooks list --json
+seksbot hooks list --json
 ```
 
 Returns structured JSON for programmatic use.
@@ -60,7 +60,7 @@ Returns structured JSON for programmatic use.
 ## Get Hook Information
 
 ```bash
-openclaw hooks info <name>
+seksbot hooks info <name>
 ```
 
 Show detailed information about a specific hook.
@@ -76,7 +76,7 @@ Show detailed information about a specific hook.
 **Example:**
 
 ```bash
-openclaw hooks info session-memory
+seksbot hooks info session-memory
 ```
 
 **Output:**
@@ -87,10 +87,10 @@ openclaw hooks info session-memory
 Save session context to memory when /new command is issued
 
 Details:
-  Source: openclaw-bundled
-  Path: /path/to/openclaw/hooks/bundled/session-memory/HOOK.md
-  Handler: /path/to/openclaw/hooks/bundled/session-memory/handler.ts
-  Homepage: https://docs.openclaw.ai/hooks#session-memory
+  Source: seksbot-bundled
+  Path: /path/to/seksbot/hooks/bundled/session-memory/HOOK.md
+  Handler: /path/to/seksbot/hooks/bundled/session-memory/handler.ts
+  Homepage: https://docs.seksbot.ai/hooks#session-memory
   Events: command:new
 
 Requirements:
@@ -100,7 +100,7 @@ Requirements:
 ## Check Hooks Eligibility
 
 ```bash
-openclaw hooks check
+seksbot hooks check
 ```
 
 Show summary of hook eligibility status (how many are ready vs. not ready).
@@ -122,12 +122,12 @@ Not ready: 0
 ## Enable a Hook
 
 ```bash
-openclaw hooks enable <name>
+seksbot hooks enable <name>
 ```
 
-Enable a specific hook by adding it to your config (`~/.openclaw/config.json`).
+Enable a specific hook by adding it to your config (`~/.seksbot/config.json`).
 
-**Note:** Hooks managed by plugins show `plugin:<id>` in `openclaw hooks list` and
+**Note:** Hooks managed by plugins show `plugin:<id>` in `seksbot hooks list` and
 can’t be enabled/disabled here. Enable/disable the plugin instead.
 
 **Arguments:**
@@ -137,7 +137,7 @@ can’t be enabled/disabled here. Enable/disable the plugin instead.
 **Example:**
 
 ```bash
-openclaw hooks enable session-memory
+seksbot hooks enable session-memory
 ```
 
 **Output:**
@@ -159,7 +159,7 @@ openclaw hooks enable session-memory
 ## Disable a Hook
 
 ```bash
-openclaw hooks disable <name>
+seksbot hooks disable <name>
 ```
 
 Disable a specific hook by updating your config.
@@ -171,7 +171,7 @@ Disable a specific hook by updating your config.
 **Example:**
 
 ```bash
-openclaw hooks disable command-logger
+seksbot hooks disable command-logger
 ```
 
 **Output:**
@@ -187,14 +187,14 @@ openclaw hooks disable command-logger
 ## Install Hooks
 
 ```bash
-openclaw hooks install <path-or-spec>
+seksbot hooks install <path-or-spec>
 ```
 
 Install a hook pack from a local folder/archive or npm.
 
 **What it does:**
 
-- Copies the hook pack into `~/.openclaw/hooks/<id>`
+- Copies the hook pack into `~/.seksbot/hooks/<id>`
 - Enables the installed hooks in `hooks.internal.entries.*`
 - Records the install under `hooks.internal.installs`
 
@@ -208,23 +208,23 @@ Install a hook pack from a local folder/archive or npm.
 
 ```bash
 # Local directory
-openclaw hooks install ./my-hook-pack
+seksbot hooks install ./my-hook-pack
 
 # Local archive
-openclaw hooks install ./my-hook-pack.zip
+seksbot hooks install ./my-hook-pack.zip
 
 # NPM package
-openclaw hooks install @openclaw/my-hook-pack
+seksbot hooks install @seksbot/my-hook-pack
 
 # Link a local directory without copying
-openclaw hooks install -l ./my-hook-pack
+seksbot hooks install -l ./my-hook-pack
 ```
 
 ## Update Hooks
 
 ```bash
-openclaw hooks update <id>
-openclaw hooks update --all
+seksbot hooks update <id>
+seksbot hooks update --all
 ```
 
 Update installed hook packs (npm installs only).
@@ -243,10 +243,10 @@ Saves session context to memory when you issue `/new`.
 **Enable:**
 
 ```bash
-openclaw hooks enable session-memory
+seksbot hooks enable session-memory
 ```
 
-**Output:** `~/.openclaw/workspace/memory/YYYY-MM-DD-slug.md`
+**Output:** `~/.seksbot/workspace/memory/YYYY-MM-DD-slug.md`
 
 **See:** [session-memory documentation](/automation/hooks#session-memory)
 
@@ -257,22 +257,22 @@ Logs all command events to a centralized audit file.
 **Enable:**
 
 ```bash
-openclaw hooks enable command-logger
+seksbot hooks enable command-logger
 ```
 
-**Output:** `~/.openclaw/logs/commands.log`
+**Output:** `~/.seksbot/logs/commands.log`
 
 **View logs:**
 
 ```bash
 # Recent commands
-tail -n 20 ~/.openclaw/logs/commands.log
+tail -n 20 ~/.seksbot/logs/commands.log
 
 # Pretty-print
-cat ~/.openclaw/logs/commands.log | jq .
+cat ~/.seksbot/logs/commands.log | jq .
 
 # Filter by action
-grep '"action":"new"' ~/.openclaw/logs/commands.log | jq .
+grep '"action":"new"' ~/.seksbot/logs/commands.log | jq .
 ```
 
 **See:** [command-logger documentation](/automation/hooks#command-logger)
@@ -284,7 +284,7 @@ Swaps injected `SOUL.md` content with `SOUL_EVIL.md` during a purge window or by
 **Enable:**
 
 ```bash
-openclaw hooks enable soul-evil
+seksbot hooks enable soul-evil
 ```
 
 **See:** [SOUL Evil Hook](/hooks/soul-evil)
@@ -298,7 +298,7 @@ Runs `BOOT.md` when the gateway starts (after channels start).
 **Enable**:
 
 ```bash
-openclaw hooks enable boot-md
+seksbot hooks enable boot-md
 ```
 
 **See:** [boot-md documentation](/automation/hooks#boot-md)

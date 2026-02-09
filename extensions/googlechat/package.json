@@ -1,18 +1,18 @@
 {
-  "name": "@openclaw/googlechat",
+  "name": "@seksbot/googlechat",
   "version": "2026.2.9",
-  "description": "OpenClaw Google Chat channel plugin",
+  "description": "seksbot Google Chat channel plugin",
   "type": "module",
   "dependencies": {
     "google-auth-library": "^10.5.0"
   },
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.1.26"
+    "seksbot": ">=2026.1.26"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ],
@@ -31,7 +31,7 @@
       "order": 55
     },
     "install": {
-      "npmSpec": "@openclaw/googlechat",
+      "npmSpec": "@seksbot/googlechat",
       "localPath": "extensions/googlechat",
       "defaultChoice": "npm"
     }

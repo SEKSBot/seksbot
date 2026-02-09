@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/google-antigravity-auth",
+  "name": "@seksbot/google-antigravity-auth",
   "version": "2026.2.9",
-  "description": "OpenClaw Google Antigravity OAuth provider plugin",
+  "description": "seksbot Google Antigravity OAuth provider plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

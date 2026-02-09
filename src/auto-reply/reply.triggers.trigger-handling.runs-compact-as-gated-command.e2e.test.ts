@@ -73,7 +73,7 @@ async function withTempHome<T>(fn: (home: string) => Promise<T>): Promise<T> {
       vi.mocked(abortEmbeddedPiRun).mockClear();
       return await fn(home);
     },
-    { prefix: "openclaw-triggers-" },
+    { prefix: "seksbot-triggers-" },
   );
 }
 
@@ -82,7 +82,7 @@ function makeCfg(home: string) {
     agents: {
       defaults: {
         model: "anthropic/claude-opus-4-5",
-        workspace: join(home, "openclaw"),
+        workspace: join(home, "seksbot"),
       },
     },
     channels: {
@@ -101,7 +101,7 @@ afterEach(() => {
 describe("trigger handling", () => {
   it("runs /compact as a gated command", async () => {
     await withTempHome(async (home) => {
-      const storePath = join(tmpdir(), `openclaw-session-test-${Date.now()}.json`);
+      const storePath = join(tmpdir(), `seksbot-session-test-${Date.now()}.json`);
       vi.mocked(compactEmbeddedPiSession).mockResolvedValue({
         ok: true,
         compacted: true,
@@ -124,7 +124,7 @@ describe("trigger handling", () => {
           agents: {
             defaults: {
               model: "anthropic/claude-opus-4-5",
-              workspace: join(home, "openclaw"),
+              workspace: join(home, "seksbot"),
             },
           },
           channels: {

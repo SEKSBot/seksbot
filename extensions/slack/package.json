@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/slack",
+  "name": "@seksbot/slack",
   "version": "2026.2.9",
-  "description": "OpenClaw Slack channel plugin",
+  "description": "seksbot Slack channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

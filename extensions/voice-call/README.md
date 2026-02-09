@@ -9,8 +9,8 @@ Providers:
 - **Plivo** (Voice API + XML transfer + GetInput speech)
 - **Mock** (dev/no network)
 
-Docs: `https://docs.openclaw.ai/plugins/voice-call`
-Plugin system: `https://docs.openclaw.ai/plugin`
+Docs: `https://docs.seksbot.ai/plugins/voice-call`
+Plugin system: `https://docs.seksbot.ai/plugin`
 
 ## Install (local dev)
 
@@ -25,9 +25,9 @@ Restart the Gateway afterwards.
 ### Option B: copy into your global extensions folder (dev)
 
 ```bash
-mkdir -p ~/.openclaw/extensions
-cp -R extensions/voice-call ~/.openclaw/extensions/voice-call
-cd ~/.openclaw/extensions/voice-call && pnpm install
+mkdir -p ~/.seksbot/extensions
+cp -R extensions/voice-call ~/.seksbot/extensions/voice-call
+cd ~/.seksbot/extensions/voice-call && pnpm install
 ```
 
 ## Config

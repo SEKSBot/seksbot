@@ -1,4 +1,4 @@
-import type { OpenClawConfig, PluginRuntime } from "openclaw/plugin-sdk";
+import type { seksbotConfig, PluginRuntime } from "seksbot/plugin-sdk";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { linePlugin } from "./channel.js";
 import { setLineRuntime } from "./runtime.js";
@@ -13,7 +13,7 @@ type LineRuntimeMocks = {
 function createRuntime(): { runtime: PluginRuntime; mocks: LineRuntimeMocks } {
   const writeConfigFile = vi.fn(async () => {});
   const resolveLineAccount = vi.fn(
-    ({ cfg, accountId }: { cfg: OpenClawConfig; accountId?: string }) => {
+    ({ cfg, accountId }: { cfg: seksbotConfig; accountId?: string }) => {
       const lineConfig = (cfg.channels?.line ?? {}) as {
         tokenFile?: string;
         secretFile?: string;
@@ -51,7 +51,7 @@ describe("linePlugin gateway.logoutAccount", () => {
     const { runtime, mocks } = createRuntime();
     setLineRuntime(runtime);
 
-    const cfg: OpenClawConfig = {
+    const cfg: seksbotConfig = {
       channels: {
         line: {
           tokenFile: "/tmp/token",
@@ -74,7 +74,7 @@ describe("linePlugin gateway.logoutAccount", () => {
     const { runtime, mocks } = createRuntime();
     setLineRuntime(runtime);
 
-    const cfg: OpenClawConfig = {
+    const cfg: seksbotConfig = {
       channels: {
         line: {
           accounts: {

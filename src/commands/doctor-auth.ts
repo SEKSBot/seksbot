@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { seksbotConfig } from "../config/config.js";
 import type { DoctorPrompter } from "./doctor-prompter.js";
 import {
   buildAuthHealthSummary,
@@ -18,9 +18,9 @@ import { formatCliCommand } from "../cli/command-format.js";
 import { note } from "../terminal/note.js";
 
 export async function maybeRepairAnthropicOAuthProfileId(
-  cfg: OpenClawConfig,
+  cfg: seksbotConfig,
   prompter: DoctorPrompter,
-): Promise<OpenClawConfig> {
+): Promise<seksbotConfig> {
   const store = ensureAuthProfileStore();
   const repair = repairOAuthProfileIdMismatch({
     cfg,
@@ -65,9 +65,9 @@ function pruneAuthOrder(
 }
 
 function pruneAuthProfiles(
-  cfg: OpenClawConfig,
+  cfg: seksbotConfig,
   profileIds: Set<string>,
-): { next: OpenClawConfig; changed: boolean } {
+): { next: seksbotConfig; changed: boolean } {
   const profiles = cfg.auth?.profiles;
   const order = cfg.auth?.order;
   const nextProfiles = profiles ? { ...profiles } : undefined;
@@ -110,9 +110,9 @@ function pruneAuthProfiles(
 }
 
 export async function maybeRemoveDeprecatedCliAuthProfiles(
-  cfg: OpenClawConfig,
+  cfg: seksbotConfig,
   prompter: DoctorPrompter,
-): Promise<OpenClawConfig> {
+): Promise<seksbotConfig> {
   const store = ensureAuthProfileStore(undefined, { allowKeychainPrompt: false });
   const deprecated = new Set<string>();
   if (store.profiles[CLAUDE_CLI_PROFILE_ID] || cfg.auth?.profiles?.[CLAUDE_CLI_PROFILE_ID]) {
@@ -129,13 +129,13 @@ export async function maybeRemoveDeprecatedCliAuthProfiles(
   const lines = ["Deprecated external CLI auth profiles detected (no longer supported):"];
   if (deprecated.has(CLAUDE_CLI_PROFILE_ID)) {
     lines.push(
-      `- ${CLAUDE_CLI_PROFILE_ID} (Anthropic): use setup-token → ${formatCliCommand("openclaw models auth setup-token")}`,
+      `- ${CLAUDE_CLI_PROFILE_ID} (Anthropic): use setup-token → ${formatCliCommand("seksbot models auth setup-token")}`,
     );
   }
   if (deprecated.has(CODEX_CLI_PROFILE_ID)) {
     lines.push(
       `- ${CODEX_CLI_PROFILE_ID} (OpenAI Codex): use OAuth → ${formatCliCommand(
-        "openclaw models auth login --provider openai-codex",
+        "seksbot models auth login --provider openai-codex",
       )}`,
     );
   }
@@ -208,16 +208,16 @@ type AuthIssue = {
 
 function formatAuthIssueHint(issue: AuthIssue): string | null {
   if (issue.provider === "anthropic" && issue.profileId === CLAUDE_CLI_PROFILE_ID) {
-    return `Deprecated profile. Use ${formatCliCommand("openclaw models auth setup-token")} or ${formatCliCommand(
-      "openclaw configure",
+    return `Deprecated profile. Use ${formatCliCommand("seksbot models auth setup-token")} or ${formatCliCommand(
+      "seksbot configure",
     )}.`;
   }
   if (issue.provider === "openai-codex" && issue.profileId === CODEX_CLI_PROFILE_ID) {
     return `Deprecated profile. Use ${formatCliCommand(
-      "openclaw models auth login --provider openai-codex",
-    )} or ${formatCliCommand("openclaw configure")}.`;
+      "seksbot models auth login --provider openai-codex",
+    )} or ${formatCliCommand("seksbot configure")}.`;
   }
-  return `Re-auth via \`${formatCliCommand("openclaw configure")}\` or \`${formatCliCommand("openclaw onboard")}\`.`;
+  return `Re-auth via \`${formatCliCommand("seksbot configure")}\` or \`${formatCliCommand("seksbot onboard")}\`.`;
 }
 
 function formatAuthIssueLine(issue: AuthIssue): string {
@@ -228,7 +228,7 @@ function formatAuthIssueLine(issue: AuthIssue): string {
 }
 
 export async function noteAuthProfileHealth(params: {
-  cfg: OpenClawConfig;
+  cfg: seksbotConfig;
   prompter: DoctorPrompter;
   allowKeychainPrompt: boolean;
 }): Promise<void> {

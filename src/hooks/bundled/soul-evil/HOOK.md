@@ -1,7 +1,7 @@
 ---
 name: soul-evil
 description: "Swap SOUL.md with SOUL_EVIL.md during a purge window or by random chance"
-homepage: https://docs.openclaw.ai/hooks/soul-evil
+homepage: https://docs.seksbot.ai/hooks/soul-evil
 metadata:
   {
     "openclaw":
@@ -31,7 +31,7 @@ You can change the filename via hook config.
 
 ## Configuration
 
-Add this to your config (`~/.openclaw/openclaw.json`):
+Add this to your config (`~/.seksbot/openclaw.json`):
 
 ```json
 {

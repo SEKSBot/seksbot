@@ -1,8 +1,8 @@
 import type { AnyAgentTool } from "../agents/tools/common.js";
-import type { OpenClawPluginToolContext } from "./types.js";
+import type { seksbotPluginToolContext } from "./types.js";
 import { normalizeToolName } from "../agents/tool-policy.js";
 import { createSubsystemLogger } from "../logging/subsystem.js";
-import { loadOpenClawPlugins } from "./loader.js";
+import { loadseksbotPlugins } from "./loader.js";
 
 const log = createSubsystemLogger("plugins");
 
@@ -41,11 +41,11 @@ function isOptionalToolAllowed(params: {
 }
 
 export function resolvePluginTools(params: {
-  context: OpenClawPluginToolContext;
+  context: seksbotPluginToolContext;
   existingToolNames?: Set<string>;
   toolAllowlist?: string[];
 }): AnyAgentTool[] {
-  const registry = loadOpenClawPlugins({
+  const registry = loadseksbotPlugins({
     config: params.context.config,
     workspaceDir: params.context.workspaceDir,
     logger: {

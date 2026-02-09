@@ -3,9 +3,9 @@ import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import {
   emptyPluginConfigSchema,
-  type OpenClawPluginApi,
+  type seksbotPluginApi,
   type ProviderAuthContext,
-} from "openclaw/plugin-sdk";
+} from "seksbot/plugin-sdk";
 
 // OAuth constants - decoded from pi-ai's base64 encoded values to stay in sync
 const decode = (s: string) => Buffer.from(s, "base64").toString();
@@ -36,7 +36,7 @@ const RESPONSE_PAGE = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>OpenClaw Antigravity OAuth</title>
+    <title>seksbot Antigravity OAuth</title>
   </head>
   <body>
     <main>
@@ -396,7 +396,7 @@ const antigravityPlugin = {
   name: "Google Antigravity Auth",
   description: "OAuth flow for Google Antigravity (Cloud Code Assist)",
   configSchema: emptyPluginConfigSchema(),
-  register(api: OpenClawPluginApi) {
+  register(api: seksbotPluginApi) {
     api.registerProvider({
       id: "google-antigravity",
       label: "Google Antigravity",

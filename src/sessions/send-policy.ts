@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { seksbotConfig } from "../config/config.js";
 import type { SessionChatType, SessionEntry } from "../config/sessions.js";
 import { normalizeChatType } from "../channels/chat-type.js";
 
@@ -45,7 +45,7 @@ function deriveChatTypeFromKey(key?: string): SessionChatType | undefined {
 }
 
 export function resolveSendPolicy(params: {
-  cfg: OpenClawConfig;
+  cfg: seksbotConfig;
   entry?: SessionEntry;
   sessionKey?: string;
   channel?: string;

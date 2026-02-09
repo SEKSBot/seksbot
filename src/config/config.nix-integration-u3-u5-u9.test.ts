@@ -5,29 +5,29 @@ import { withEnvOverride, withTempHome } from "./test-helpers.js";
 
 describe("Nix integration (U3, U5, U9)", () => {
   describe("U3: isNixMode env var detection", () => {
-    it("isNixMode is false when OPENCLAW_NIX_MODE is not set", async () => {
-      await withEnvOverride({ OPENCLAW_NIX_MODE: undefined }, async () => {
+    it("isNixMode is false when SEKSBOT_NIX_MODE is not set", async () => {
+      await withEnvOverride({ SEKSBOT_NIX_MODE: undefined }, async () => {
         const { isNixMode } = await import("./config.js");
         expect(isNixMode).toBe(false);
       });
     });
 
-    it("isNixMode is false when OPENCLAW_NIX_MODE is empty", async () => {
-      await withEnvOverride({ OPENCLAW_NIX_MODE: "" }, async () => {
+    it("isNixMode is false when SEKSBOT_NIX_MODE is empty", async () => {
+      await withEnvOverride({ SEKSBOT_NIX_MODE: "" }, async () => {
         const { isNixMode } = await import("./config.js");
         expect(isNixMode).toBe(false);
       });
     });
 
-    it("isNixMode is false when OPENCLAW_NIX_MODE is not '1'", async () => {
-      await withEnvOverride({ OPENCLAW_NIX_MODE: "true" }, async () => {
+    it("isNixMode is false when SEKSBOT_NIX_MODE is not '1'", async () => {
+      await withEnvOverride({ SEKSBOT_NIX_MODE: "true" }, async () => {
         const { isNixMode } = await import("./config.js");
         expect(isNixMode).toBe(false);
       });
     });
 
-    it("isNixMode is true when OPENCLAW_NIX_MODE=1", async () => {
-      await withEnvOverride({ OPENCLAW_NIX_MODE: "1" }, async () => {
+    it("isNixMode is true when SEKSBOT_NIX_MODE=1", async () => {
+      await withEnvOverride({ SEKSBOT_NIX_MODE: "1" }, async () => {
         const { isNixMode } = await import("./config.js");
         expect(isNixMode).toBe(true);
       });
@@ -35,70 +35,70 @@ describe("Nix integration (U3, U5, U9)", () => {
   });
 
   describe("U5: CONFIG_PATH and STATE_DIR env var overrides", () => {
-    it("STATE_DIR defaults to ~/.openclaw when env not set", async () => {
-      await withEnvOverride({ OPENCLAW_STATE_DIR: undefined }, async () => {
+    it("STATE_DIR defaults to ~/.seksbot when env not set", async () => {
+      await withEnvOverride({ SEKSBOT_STATE_DIR: undefined }, async () => {
         const { STATE_DIR } = await import("./config.js");
-        expect(STATE_DIR).toMatch(/\.openclaw$/);
+        expect(STATE_DIR).toMatch(/\.seksbot$/);
       });
     });
 
-    it("STATE_DIR respects OPENCLAW_STATE_DIR override", async () => {
-      await withEnvOverride({ OPENCLAW_STATE_DIR: "/custom/state/dir" }, async () => {
+    it("STATE_DIR respects SEKSBOT_STATE_DIR override", async () => {
+      await withEnvOverride({ SEKSBOT_STATE_DIR: "/custom/state/dir" }, async () => {
         const { STATE_DIR } = await import("./config.js");
         expect(STATE_DIR).toBe(path.resolve("/custom/state/dir"));
       });
     });
 
-    it("STATE_DIR respects OPENCLAW_HOME when state override is unset", async () => {
+    it("STATE_DIR respects SEKSBOT_HOME when state override is unset", async () => {
       const customHome = path.join(path.sep, "custom", "home");
       await withEnvOverride(
-        { OPENCLAW_HOME: customHome, OPENCLAW_STATE_DIR: undefined },
+        { SEKSBOT_HOME: customHome, SEKSBOT_STATE_DIR: undefined },
         async () => {
           const { STATE_DIR } = await import("./config.js");
-          expect(STATE_DIR).toBe(path.join(path.resolve(customHome), ".openclaw"));
+          expect(STATE_DIR).toBe(path.join(path.resolve(customHome), ".seksbot"));
         },
       );
     });
 
-    it("CONFIG_PATH defaults to OPENCLAW_HOME/.openclaw/openclaw.json", async () => {
+    it("CONFIG_PATH defaults to SEKSBOT_HOME/.seksbot/seksbot.json", async () => {
       const customHome = path.join(path.sep, "custom", "home");
       await withEnvOverride(
         {
-          OPENCLAW_HOME: customHome,
-          OPENCLAW_CONFIG_PATH: undefined,
-          OPENCLAW_STATE_DIR: undefined,
+          SEKSBOT_HOME: customHome,
+          SEKSBOT_CONFIG_PATH: undefined,
+          SEKSBOT_STATE_DIR: undefined,
         },
         async () => {
           const { CONFIG_PATH } = await import("./config.js");
           expect(CONFIG_PATH).toBe(
-            path.join(path.resolve(customHome), ".openclaw", "openclaw.json"),
+            path.join(path.resolve(customHome), ".seksbot", "seksbot.json"),
           );
         },
       );
     });
 
-    it("CONFIG_PATH defaults to ~/.openclaw/openclaw.json when env not set", async () => {
+    it("CONFIG_PATH defaults to ~/.seksbot/seksbot.json when env not set", async () => {
       await withEnvOverride(
-        { OPENCLAW_CONFIG_PATH: undefined, OPENCLAW_STATE_DIR: undefined },
+        { SEKSBOT_CONFIG_PATH: undefined, SEKSBOT_STATE_DIR: undefined },
         async () => {
           const { CONFIG_PATH } = await import("./config.js");
-          expect(CONFIG_PATH).toMatch(/\.openclaw[\\/]openclaw\.json$/);
+          expect(CONFIG_PATH).toMatch(/\.seksbot[\\/]seksbot\.json$/);
         },
       );
     });
 
-    it("CONFIG_PATH respects OPENCLAW_CONFIG_PATH override", async () => {
-      await withEnvOverride({ OPENCLAW_CONFIG_PATH: "/nix/store/abc/openclaw.json" }, async () => {
+    it("CONFIG_PATH respects SEKSBOT_CONFIG_PATH override", async () => {
+      await withEnvOverride({ SEKSBOT_CONFIG_PATH: "/nix/store/abc/seksbot.json" }, async () => {
         const { CONFIG_PATH } = await import("./config.js");
-        expect(CONFIG_PATH).toBe(path.resolve("/nix/store/abc/openclaw.json"));
+        expect(CONFIG_PATH).toBe(path.resolve("/nix/store/abc/seksbot.json"));
       });
     });
 
-    it("CONFIG_PATH expands ~ in OPENCLAW_CONFIG_PATH override", async () => {
+    it("CONFIG_PATH expands ~ in SEKSBOT_CONFIG_PATH override", async () => {
       await withTempHome(async (home) => {
-        await withEnvOverride({ OPENCLAW_CONFIG_PATH: "~/.openclaw/custom.json" }, async () => {
+        await withEnvOverride({ SEKSBOT_CONFIG_PATH: "~/.seksbot/custom.json" }, async () => {
           const { CONFIG_PATH } = await import("./config.js");
-          expect(CONFIG_PATH).toBe(path.join(home, ".openclaw", "custom.json"));
+          expect(CONFIG_PATH).toBe(path.join(home, ".seksbot", "custom.json"));
         });
       });
     });
@@ -106,12 +106,12 @@ describe("Nix integration (U3, U5, U9)", () => {
     it("CONFIG_PATH uses STATE_DIR when only state dir is overridden", async () => {
       await withEnvOverride(
         {
-          OPENCLAW_CONFIG_PATH: undefined,
-          OPENCLAW_STATE_DIR: "/custom/state",
+          SEKSBOT_CONFIG_PATH: undefined,
+          SEKSBOT_STATE_DIR: "/custom/state",
         },
         async () => {
           const { CONFIG_PATH } = await import("./config.js");
-          expect(CONFIG_PATH).toBe(path.join(path.resolve("/custom/state"), "openclaw.json"));
+          expect(CONFIG_PATH).toBe(path.join(path.resolve("/custom/state"), "seksbot.json"));
         },
       );
     });
@@ -120,7 +120,7 @@ describe("Nix integration (U3, U5, U9)", () => {
   describe("U5b: tilde expansion for config paths", () => {
     it("expands ~ in common path-ish config fields", async () => {
       await withTempHome(async (home) => {
-        const configDir = path.join(home, ".openclaw");
+        const configDir = path.join(home, ".seksbot");
         await fs.mkdir(configDir, { recursive: true });
         const pluginDir = path.join(home, "plugins", "demo-plugin");
         await fs.mkdir(pluginDir, { recursive: true });
@@ -130,7 +130,7 @@ describe("Nix integration (U3, U5, U9)", () => {
           "utf-8",
         );
         await fs.writeFile(
-          path.join(pluginDir, "openclaw.plugin.json"),
+          path.join(pluginDir, "seksbot.plugin.json"),
           JSON.stringify(
             {
               id: "demo-plugin",
@@ -142,7 +142,7 @@ describe("Nix integration (U3, U5, U9)", () => {
           "utf-8",
         );
         await fs.writeFile(
-          path.join(configDir, "openclaw.json"),
+          path.join(configDir, "seksbot.json"),
           JSON.stringify(
             {
               plugins: {
@@ -156,7 +156,7 @@ describe("Nix integration (U3, U5, U9)", () => {
                   {
                     id: "main",
                     workspace: "~/ws-agent",
-                    agentDir: "~/.openclaw/agents/main",
+                    agentDir: "~/.seksbot/agents/main",
                     sandbox: { workspaceRoot: "~/sandbox-root" },
                   },
                 ],
@@ -165,7 +165,7 @@ describe("Nix integration (U3, U5, U9)", () => {
                 whatsapp: {
                   accounts: {
                     personal: {
-                      authDir: "~/.openclaw/credentials/wa-personal",
+                      authDir: "~/.seksbot/credentials/wa-personal",
                     },
                   },
                 },
@@ -185,11 +185,11 @@ describe("Nix integration (U3, U5, U9)", () => {
         expect(cfg.agents?.defaults?.workspace).toBe(path.join(home, "ws-default"));
         expect(cfg.agents?.list?.[0]?.workspace).toBe(path.join(home, "ws-agent"));
         expect(cfg.agents?.list?.[0]?.agentDir).toBe(
-          path.join(home, ".openclaw", "agents", "main"),
+          path.join(home, ".seksbot", "agents", "main"),
         );
         expect(cfg.agents?.list?.[0]?.sandbox?.workspaceRoot).toBe(path.join(home, "sandbox-root"));
         expect(cfg.channels?.whatsapp?.accounts?.personal?.authDir).toBe(
-          path.join(home, ".openclaw", "credentials", "wa-personal"),
+          path.join(home, ".seksbot", "credentials", "wa-personal"),
         );
       });
     });
@@ -197,21 +197,21 @@ describe("Nix integration (U3, U5, U9)", () => {
 
   describe("U6: gateway port resolution", () => {
     it("uses default when env and config are unset", async () => {
-      await withEnvOverride({ OPENCLAW_GATEWAY_PORT: undefined }, async () => {
+      await withEnvOverride({ SEKSBOT_GATEWAY_PORT: undefined }, async () => {
         const { DEFAULT_GATEWAY_PORT, resolveGatewayPort } = await import("./config.js");
         expect(resolveGatewayPort({})).toBe(DEFAULT_GATEWAY_PORT);
       });
     });
 
-    it("prefers OPENCLAW_GATEWAY_PORT over config", async () => {
-      await withEnvOverride({ OPENCLAW_GATEWAY_PORT: "19001" }, async () => {
+    it("prefers SEKSBOT_GATEWAY_PORT over config", async () => {
+      await withEnvOverride({ SEKSBOT_GATEWAY_PORT: "19001" }, async () => {
         const { resolveGatewayPort } = await import("./config.js");
         expect(resolveGatewayPort({ gateway: { port: 19002 } })).toBe(19001);
       });
     });
 
     it("falls back to config when env is invalid", async () => {
-      await withEnvOverride({ OPENCLAW_GATEWAY_PORT: "nope" }, async () => {
+      await withEnvOverride({ SEKSBOT_GATEWAY_PORT: "nope" }, async () => {
         const { resolveGatewayPort } = await import("./config.js");
         expect(resolveGatewayPort({ gateway: { port: 19003 } })).toBe(19003);
       });
@@ -221,10 +221,10 @@ describe("Nix integration (U3, U5, U9)", () => {
   describe("U9: telegram.tokenFile schema validation", () => {
     it("accepts config with only botToken", async () => {
       await withTempHome(async (home) => {
-        const configDir = path.join(home, ".openclaw");
+        const configDir = path.join(home, ".seksbot");
         await fs.mkdir(configDir, { recursive: true });
         await fs.writeFile(
-          path.join(configDir, "openclaw.json"),
+          path.join(configDir, "seksbot.json"),
           JSON.stringify({
             channels: { telegram: { botToken: "123:ABC" } },
           }),
@@ -241,10 +241,10 @@ describe("Nix integration (U3, U5, U9)", () => {
 
     it("accepts config with only tokenFile", async () => {
       await withTempHome(async (home) => {
-        const configDir = path.join(home, ".openclaw");
+        const configDir = path.join(home, ".seksbot");
         await fs.mkdir(configDir, { recursive: true });
         await fs.writeFile(
-          path.join(configDir, "openclaw.json"),
+          path.join(configDir, "seksbot.json"),
           JSON.stringify({
             channels: { telegram: { tokenFile: "/run/agenix/telegram-token" } },
           }),
@@ -261,10 +261,10 @@ describe("Nix integration (U3, U5, U9)", () => {
 
     it("accepts config with both botToken and tokenFile", async () => {
       await withTempHome(async (home) => {
-        const configDir = path.join(home, ".openclaw");
+        const configDir = path.join(home, ".seksbot");
         await fs.mkdir(configDir, { recursive: true });
         await fs.writeFile(
-          path.join(configDir, "openclaw.json"),
+          path.join(configDir, "seksbot.json"),
           JSON.stringify({
             channels: {
               telegram: {

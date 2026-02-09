@@ -1,15 +1,15 @@
 {
-  "name": "@openclaw/zalo",
+  "name": "@seksbot/zalo",
   "version": "2026.2.9",
-  "description": "OpenClaw Zalo channel plugin",
+  "description": "seksbot Zalo channel plugin",
   "type": "module",
   "dependencies": {
     "undici": "7.21.0"
   },
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ],
@@ -27,7 +27,7 @@
       "quickstartAllowFrom": true
     },
     "install": {
-      "npmSpec": "@openclaw/zalo",
+      "npmSpec": "@seksbot/zalo",
       "localPath": "extensions/zalo",
       "defaultChoice": "npm"
     }

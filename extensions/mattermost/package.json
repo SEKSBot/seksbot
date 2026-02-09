@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/mattermost",
+  "name": "@seksbot/mattermost",
   "version": "2026.2.9",
-  "description": "OpenClaw Mattermost channel plugin",
+  "description": "seksbot Mattermost channel plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ],
@@ -20,7 +20,7 @@
       "order": 65
     },
     "install": {
-      "npmSpec": "@openclaw/mattermost",
+      "npmSpec": "@seksbot/mattermost",
       "localPath": "extensions/mattermost",
       "defaultChoice": "npm"
     }

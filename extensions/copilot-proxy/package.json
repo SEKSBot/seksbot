@@ -1,12 +1,12 @@
 {
-  "name": "@openclaw/copilot-proxy",
+  "name": "@seksbot/copilot-proxy",
   "version": "2026.2.9",
-  "description": "OpenClaw Copilot Proxy provider plugin",
+  "description": "seksbot Copilot Proxy provider plugin",
   "type": "module",
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
-  "openclaw": {
+  "seksbot": {
     "extensions": [
       "./index.ts"
     ]

@@ -81,43 +81,43 @@ vi.mock("./progress.js", () => ({
 
 describe("daemon-cli coverage", () => {
   const originalEnv = {
-    OPENCLAW_STATE_DIR: process.env.OPENCLAW_STATE_DIR,
-    OPENCLAW_CONFIG_PATH: process.env.OPENCLAW_CONFIG_PATH,
-    OPENCLAW_GATEWAY_PORT: process.env.OPENCLAW_GATEWAY_PORT,
-    OPENCLAW_PROFILE: process.env.OPENCLAW_PROFILE,
+    SEKSBOT_STATE_DIR: process.env.SEKSBOT_STATE_DIR,
+    SEKSBOT_CONFIG_PATH: process.env.SEKSBOT_CONFIG_PATH,
+    SEKSBOT_GATEWAY_PORT: process.env.SEKSBOT_GATEWAY_PORT,
+    SEKSBOT_PROFILE: process.env.SEKSBOT_PROFILE,
   };
 
   beforeEach(() => {
-    process.env.OPENCLAW_STATE_DIR = "/tmp/openclaw-cli-state";
-    process.env.OPENCLAW_CONFIG_PATH = "/tmp/openclaw-cli-state/openclaw.json";
-    delete process.env.OPENCLAW_GATEWAY_PORT;
-    delete process.env.OPENCLAW_PROFILE;
+    process.env.SEKSBOT_STATE_DIR = "/tmp/seksbot-cli-state";
+    process.env.SEKSBOT_CONFIG_PATH = "/tmp/seksbot-cli-state/seksbot.json";
+    delete process.env.SEKSBOT_GATEWAY_PORT;
+    delete process.env.SEKSBOT_PROFILE;
     serviceReadCommand.mockResolvedValue(null);
   });
 
   afterEach(() => {
-    if (originalEnv.OPENCLAW_STATE_DIR !== undefined) {
-      process.env.OPENCLAW_STATE_DIR = originalEnv.OPENCLAW_STATE_DIR;
+    if (originalEnv.SEKSBOT_STATE_DIR !== undefined) {
+      process.env.SEKSBOT_STATE_DIR = originalEnv.SEKSBOT_STATE_DIR;
     } else {
-      delete process.env.OPENCLAW_STATE_DIR;
+      delete process.env.SEKSBOT_STATE_DIR;
     }
 
-    if (originalEnv.OPENCLAW_CONFIG_PATH !== undefined) {
-      process.env.OPENCLAW_CONFIG_PATH = originalEnv.OPENCLAW_CONFIG_PATH;
+    if (originalEnv.SEKSBOT_CONFIG_PATH !== undefined) {
+      process.env.SEKSBOT_CONFIG_PATH = originalEnv.SEKSBOT_CONFIG_PATH;
     } else {
-      delete process.env.OPENCLAW_CONFIG_PATH;
+      delete process.env.SEKSBOT_CONFIG_PATH;
     }
 
-    if (originalEnv.OPENCLAW_GATEWAY_PORT !== undefined) {
-      process.env.OPENCLAW_GATEWAY_PORT = originalEnv.OPENCLAW_GATEWAY_PORT;
+    if (originalEnv.SEKSBOT_GATEWAY_PORT !== undefined) {
+      process.env.SEKSBOT_GATEWAY_PORT = originalEnv.SEKSBOT_GATEWAY_PORT;
     } else {
-      delete process.env.OPENCLAW_GATEWAY_PORT;
+      delete process.env.SEKSBOT_GATEWAY_PORT;
     }
 
-    if (originalEnv.OPENCLAW_PROFILE !== undefined) {
-      process.env.OPENCLAW_PROFILE = originalEnv.OPENCLAW_PROFILE;
+    if (originalEnv.SEKSBOT_PROFILE !== undefined) {
+      process.env.SEKSBOT_PROFILE = originalEnv.SEKSBOT_PROFILE;
     } else {
-      delete process.env.OPENCLAW_PROFILE;
+      delete process.env.SEKSBOT_PROFILE;
     }
   });
 
@@ -148,10 +148,10 @@ describe("daemon-cli coverage", () => {
     serviceReadCommand.mockResolvedValueOnce({
       programArguments: ["/bin/node", "cli", "gateway", "--port", "19001"],
       environment: {
-        OPENCLAW_PROFILE: "dev",
-        OPENCLAW_STATE_DIR: "/tmp/openclaw-daemon-state",
-        OPENCLAW_CONFIG_PATH: "/tmp/openclaw-daemon-state/openclaw.json",
-        OPENCLAW_GATEWAY_PORT: "19001",
+        SEKSBOT_PROFILE: "dev",
+        SEKSBOT_STATE_DIR: "/tmp/seksbot-daemon-state",
+        SEKSBOT_CONFIG_PATH: "/tmp/seksbot-daemon-state/seksbot.json",
+        SEKSBOT_GATEWAY_PORT: "19001",
       },
       sourcePath: "/tmp/bot.molt.gateway.plist",
     });
