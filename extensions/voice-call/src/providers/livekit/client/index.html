@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seksbot Voice Call</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --primary: #e94560;
+      --secondary: #0f3460;
+      --text: #eee;
+      --text-muted: #888;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: var(--surface);
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      border: 3px solid var(--secondary);
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .avatar.speaking {
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(233, 69, 96, 0.4);
+    }
+
+    .avatar.listening {
+      border-color: #4ade80;
+      box-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+    }
+
+    .status {
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .status.connected {
+      color: #4ade80;
+    }
+
+    .status.error {
+      color: var(--primary);
+    }
+
+    .controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .call-btn {
+      background: var(--primary);
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+    }
+
+    .call-btn.connected {
+      background: #ef4444;
+    }
+
+    .mute-btn {
+      background: var(--surface);
+      color: var(--text);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+
+    .mute-btn.muted {
+      background: #ef4444;
+    }
+
+    .transcript {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--surface);
+      border-radius: 0.5rem;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .transcript-entry {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+    }
+
+    .transcript-entry.user {
+      background: var(--secondary);
+    }
+
+    .transcript-entry.agent {
+      background: rgba(233, 69, 96, 0.2);
+    }
+
+    .transcript-entry .speaker {
+      font-weight: bold;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .agent-select {
+      margin-bottom: 1.5rem;
+    }
+
+    .agent-select select {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--secondary);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Seksbot Voice</h1>
+    <p class="subtitle">Talk to your AI agent</p>
+
+    <div class="agent-select">
+      <select id="agent-select">
+        <option value="annie">🌙 Annie</option>
+        <option value="siofra">🌿 Síofra</option>
+        <option value="aeon">⚡ Aeon</option>
+      </select>
+    </div>
+
+    <div class="avatar" id="avatar">🌙</div>
+
+    <div class="status" id="status">Ready to connect</div>
+
+    <div class="controls">
+      <button class="mute-btn" id="mute-btn" disabled title="Mute">🎤</button>
+      <button class="call-btn" id="call-btn" title="Start call">📞</button>
+    </div>
+
+    <div class="transcript" id="transcript" style="display: none;"></div>
+  </div>
+
+  <script type="module">
+    // LiveKit SDK loaded from CDN
+    // In production, bundle this properly
+    import {
+      Room,
+      RoomEvent,
+      createLocalAudioTrack,
+    } from 'https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.esm.mjs';
+
+    const avatar = document.getElementById('avatar');
+    const status = document.getElementById('status');
+    const callBtn = document.getElementById('call-btn');
+    const muteBtn = document.getElementById('mute-btn');
+    const transcript = document.getElementById('transcript');
+    const agentSelect = document.getElementById('agent-select');
+
+    const agentEmojis = {
+      annie: '🌙',
+      siofra: '🌿',
+      aeon: '⚡',
+    };
+
+    let room = null;
+    let localAudioTrack = null;
+    let connected = false;
+    let muted = false;
+
+    // Update avatar emoji when agent changes
+    agentSelect.addEventListener('change', () => {
+      if (!connected) {
+        avatar.textContent = agentEmojis[agentSelect.value] || '🤖';
+      }
+    });
+
+    // Call button handler
+    callBtn.addEventListener('click', async () => {
+      if (connected) {
+        await disconnect();
+      } else {
+        await connect();
+      }
+    });
+
+    // Mute button handler
+    muteBtn.addEventListener('click', () => {
+      if (localAudioTrack) {
+        muted = !muted;
+        localAudioTrack.mute(muted);
+        muteBtn.textContent = muted ? '🔇' : '🎤';
+        muteBtn.classList.toggle('muted', muted);
+      }
+    });
+
+    async function connect() {
+      try {
+        setStatus('Connecting...', '');
+
+        // Get token from server
+        const agent = agentSelect.value;
+        const response = await fetch(`/voice/token?agent=${agent}`);
+        if (!response.ok) {
+          throw new Error('Failed to get token');
+        }
+        const { token, wsUrl, roomName } = await response.json();
+
+        // Create room and connect
+        room = new Room();
+
+        // Set up event handlers
+        room.on(RoomEvent.Connected, () => {
+          setStatus('Connected', 'connected');
+          callBtn.classList.add('connected');
+          callBtn.textContent = '📴';
+          muteBtn.disabled = false;
+          transcript.style.display = 'block';
+          connected = true;
+        });
+
+        room.on(RoomEvent.Disconnected, () => {
+          setStatus('Disconnected', '');
+          callBtn.classList.remove('connected');
+          callBtn.textContent = '📞';
+          muteBtn.disabled = true;
+          connected = false;
+        });
+
+        room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          if (track.kind === 'audio') {
+            // Attach remote audio to play through speakers
+            const audioElement = track.attach();
+            document.body.appendChild(audioElement);
+          }
+        });
+
+        // Connect to room
+        await room.connect(wsUrl, token);
+
+        // Publish local audio
+        localAudioTrack = await createLocalAudioTrack();
+        await room.localParticipant.publishTrack(localAudioTrack);
+
+      } catch (err) {
+        console.error('Connection error:', err);
+        setStatus(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function disconnect() {
+      if (room) {
+        await room.disconnect();
+        room = null;
+      }
+      if (localAudioTrack) {
+        localAudioTrack.stop();
+        localAudioTrack = null;
+      }
+      connected = false;
+      muted = false;
+      muteBtn.textContent = '🎤';
+      muteBtn.classList.remove('muted');
+    }
+
+    function setStatus(text, className) {
+      status.textContent = text;
+      status.className = 'status ' + className;
+    }
+
+    function addTranscript(speaker, text) {
+      const entry = document.createElement('div');
+      entry.className = `transcript-entry ${speaker}`;
+      entry.innerHTML = `
+        <div class="speaker">${speaker}</div>
+        <div>${text}</div>
+      `;
+      transcript.appendChild(entry);
+      transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    // Expose for debugging
+    window.seksbot = { connect, disconnect, room };
+  </script>
+</body>
+</html>

@@ -8,3 +8,4 @@ export {
 export { TelnyxProvider } from "./telnyx.js";
 export { TwilioProvider } from "./twilio.js";
 export { PlivoProvider } from "./plivo.js";
+export { LiveKitProvider, createLiveKitProvider, type LiveKitConfig } from "./livekit/index.js";

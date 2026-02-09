@@ -62,6 +62,22 @@ export const PlivoConfigSchema = z
   .strict();
 export type PlivoConfig = z.infer<typeof PlivoConfigSchema>;
 
+export const LiveKitConfigSchema = z
+  .object({
+    /** LiveKit server WebSocket URL (e.g., wss://your-app.livekit.cloud) */
+    wsUrl: z.string().url().optional(),
+    /** LiveKit API key */
+    apiKey: z.string().min(1).optional(),
+    /** LiveKit API secret */
+    apiSecret: z.string().min(1).optional(),
+    /** Room name prefix (default: seksbot-) */
+    roomPrefix: z.string().min(1).default("seksbot-"),
+    /** Max participants per room (default: 2 = 1 user + 1 agent) */
+    maxParticipants: z.number().int().positive().default(2),
+  })
+  .strict();
+export type LiveKitConfig = z.infer<typeof LiveKitConfigSchema>;
+
 // -----------------------------------------------------------------------------
 // STT/TTS Configuration
 // -----------------------------------------------------------------------------
@@ -306,8 +322,8 @@ export const VoiceCallConfigSchema = z
     /** Enable voice call functionality */
     enabled: z.boolean().default(false),
 
-    /** Active provider (telnyx, twilio, plivo, or mock) */
-    provider: z.enum(["telnyx", "twilio", "plivo", "mock"]).optional(),
+    /** Active provider (telnyx, twilio, plivo, livekit, or mock) */
+    provider: z.enum(["telnyx", "twilio", "plivo", "livekit", "mock"]).optional(),
 
     /** Telnyx-specific configuration */
     telnyx: TelnyxConfigSchema.optional(),
@@ -317,6 +333,9 @@ export const VoiceCallConfigSchema = z
 
     /** Plivo-specific configuration */
     plivo: PlivoConfigSchema.optional(),
+
+    /** LiveKit-specific configuration (WebRTC, browser-based) */
+    livekit: LiveKitConfigSchema.optional(),
 
     /** Phone number to call from (E.164) */
     fromNumber: E164Schema.optional(),
