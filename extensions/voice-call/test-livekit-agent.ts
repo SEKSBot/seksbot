@@ -197,28 +197,41 @@ async function generateResponse(session: AgentSession, userMessage: string): Pro
 
   if (ANTHROPIC_API_KEY) {
     // Use Claude
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 150,
-        system: session.conversationHistory[0].content,
-        messages: session.conversationHistory.slice(1).map((m) => ({
-          role: m.role === "user" ? "user" : "assistant",
-          content: m.content,
-        })),
-      }),
-    });
+    try {
+      console.log("🧠 Calling Claude...");
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 300,
+          system: session.conversationHistory[0].content,
+          messages: session.conversationHistory.slice(1).map((m) => ({
+            role: m.role === "user" ? "user" : "assistant",
+            content: m.content,
+          })),
+        }),
+      });
 
-    const data = (await response.json()) as any;
-    const reply = data.content?.[0]?.text || "I'm not sure what to say.";
-    session.conversationHistory.push({ role: "assistant", content: reply });
-    return reply;
+      if (!response.ok) {
+        const err = await response.text();
+        console.error("❌ Claude API error:", response.status, err);
+        return "Sorry, I had trouble responding. Check the terminal for details.";
+      }
+
+      const data = (await response.json()) as any;
+      console.log("✅ Claude responded");
+      const reply = data.content?.[0]?.text || "I'm not sure what to say.";
+      session.conversationHistory.push({ role: "assistant", content: reply });
+      return reply;
+    } catch (err) {
+      console.error("❌ Claude exception:", err);
+      return "Sorry, I couldn't connect.";
+    }
   } else {
     // Use GPT-4o
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -334,8 +347,9 @@ const server = http.createServer(async (req, res) => {
       });
       const jwt = await token.toJwt();
 
-      // Have agent join the room
-      await joinAgentToRoom(roomName, agent);
+      // Note: Agent joining via LiveKit not needed for this simplified test
+      // (using browser speech recognition instead)
+      console.log(`🤖 Agent ${agent} ready to respond`);
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(
