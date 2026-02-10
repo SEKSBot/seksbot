@@ -31,8 +31,8 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 // ElevenLabs voice IDs - these are nice female voices
 const elevenLabsVoices: Record<string, string> = {
   annie: "EXAVITQu4vr4xnSDxMaL", // Bella - warm and friendly
-  siofra: "jBpfuIE2acCO8z3wKNLl", // Gigi - young and gentle
-  aeon: "XB0fDUnXU5powFXDhCwa", // Charlotte - confident and clear
+  siofra: "XB0fDUnXU5powFXDhCwa", // Charlotte - clear and thoughtful
+  aeon: "21m00Tcm4TlvDq8ikWAM", // Rachel - confident and direct
 };
 
 // Validate required env
