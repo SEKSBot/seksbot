@@ -1,0 +1,12 @@
+default: &default
+  database: cache
+  store_options:
+    max_age: <%= 13.weeks.to_i %>
+    max_size: <%= 2.gigabytes %>
+    namespace: <%= Rails.env %>
+
+development:
+  <<: *default
+
+production:
+  <<: *default

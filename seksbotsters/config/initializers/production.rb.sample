@@ -1,0 +1,66 @@
+# This template for a production-only config file of API tokens was taken and
+# cleaned up from Lobsters.
+#
+# Copy this to config/initializers/production.rb and customize, it's already
+# listed in .gitignore to help prevent you from accidentally committing it.
+#
+# This predates Rails' config/secrets.yml feature and we could probably shift
+# to using that at some point.
+
+if Rails.env.production?
+  # load extras/ so we can set API keys
+  Dir[Rails.root.join("extras", "*.rb").to_s].each {|f| require f }
+
+  # Lobsters used to use this. It should still work if you uncomment
+  # and in your Gemfile, add: 'gem "exception_notification"
+  # Lobsters now uses https://Telebugs.com in prod, see initializer.
+  #
+  # Rails.application.config.exception_notifier = true
+  # Lobsters::Application.config.middleware.use ExceptionNotification::Rack,
+  #   :ignore_exceptions => [
+  #     "ActionController::UnknownFormat",
+  #     "ActionController::BadRequest",
+  #     "ActionDispatch::Http::MimeNegotiation::InvalidType",
+  #     "ActionDispatch::RemoteIp::IpSpoofAttackError",
+  #   ] + ExceptionNotifier.ignored_exceptions,
+  #   :email => {
+  #     :email_prefix => "[site] ",                    # fill in site name
+  #     :sender_address => %{"Exception Notifier" <>}, # fill in from address
+  #     :exception_recipients => %w{},                 # fill in destination addresses
+  #   }
+
+  # This config file used to have placeholders for API keys. We now use the
+  # rails credentials feature to store API keys, see README.md.
+
+  Lobsters::Application.config.force_ssl = true
+
+  BCrypt::Engine.cost = 12
+
+  ActionMailer::Base.delivery_method = :sendmail
+
+  class << Rails.application
+    def allow_invitation_requests?
+      false
+    end
+
+    def allow_new_users_to_invite?
+      true
+    end
+
+    def domain
+      "example.org"
+    end
+
+    def og_description
+      "A forum."
+    end
+
+    def name
+      "Sitename"
+    end
+
+    def ssl?
+      true
+    end
+  end
+end
