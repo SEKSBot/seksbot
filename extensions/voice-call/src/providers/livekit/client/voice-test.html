@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Talk to AI Sisters</title>
+    <style>
+      :root {
+        --bg: #1a1a2e;
+        --surface: #16213e;
+        --primary: #e94560;
+        --text: #eee;
+        --text-muted: #888;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+      }
+
+      .agent-select {
+        margin-bottom: 1.5rem;
+      }
+      .agent-select select {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--primary);
+        background: var(--surface);
+        color: var(--text);
+        font-size: 1.1rem;
+      }
+
+      .avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: var(--surface);
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        border: 4px solid var(--surface);
+        transition: all 0.3s;
+      }
+      .avatar.listening {
+        border-color: #3b82f6;
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+      }
+      .avatar.speaking {
+        border-color: var(--primary);
+        box-shadow: 0 0 30px rgba(233, 69, 96, 0.5);
+        animation: pulse 0.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .status {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        min-height: 1.5em;
+      }
+      .status.listening {
+        color: #3b82f6;
+      }
+      .status.speaking {
+        color: var(--primary);
+      }
+      .status.error {
+        color: #ef4444;
+      }
+
+      .talk-btn {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .talk-btn:hover {
+        transform: scale(1.1);
+      }
+      .talk-btn:active {
+        transform: scale(0.95);
+      }
+      .talk-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .talk-btn.listening {
+        background: #3b82f6;
+      }
+
+      .transcript {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: var(--surface);
+        border-radius: 0.5rem;
+        text-align: left;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .transcript-entry {
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+      }
+      .transcript-entry.user {
+        background: rgba(59, 130, 246, 0.2);
+      }
+      .transcript-entry.agent {
+        background: rgba(233, 69, 96, 0.2);
+      }
+      .transcript-entry .speaker {
+        font-weight: bold;
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-bottom: 0.25rem;
+      }
+
+      .hint {
+        margin-top: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Talk to AI Sisters</h1>
+      <p class="subtitle">Using Claude • Voice Recognition</p>
+
+      <div class="agent-select">
+        <select id="agent">
+          <option value="annie">🌙 Annie</option>
+          <option value="siofra">🌿 Síofra</option>
+          <option value="aeon">⚡ Aeon</option>
+        </select>
+      </div>
+
+      <div class="avatar" id="avatar">🌙</div>
+      <div class="status" id="status">Click the button and speak</div>
+
+      <button class="talk-btn" id="talkBtn">🎤</button>
+
+      <div class="transcript" id="transcript"></div>
+
+      <p class="hint">Hold to talk, release to send</p>
+    </div>
+
+    <script>
+      const avatar = document.getElementById("avatar");
+      const status = document.getElementById("status");
+      const talkBtn = document.getElementById("talkBtn");
+      const transcript = document.getElementById("transcript");
+      const agentSelect = document.getElementById("agent");
+
+      const emojis = { annie: "🌙", siofra: "🌿", aeon: "⚡" };
+      let recognition = null;
+      let synthesis = window.speechSynthesis;
+      let isListening = false;
+      let roomName = null;
+      let currentAgent = "annie";
+
+      // Update avatar when agent changes
+      agentSelect.addEventListener("change", () => {
+        currentAgent = agentSelect.value;
+        avatar.textContent = emojis[currentAgent];
+      });
+
+      // Check for speech recognition support
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        status.textContent = "Speech recognition not supported in this browser";
+        status.classList.add("error");
+        talkBtn.disabled = true;
+      } else {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+
+        recognition.onstart = () => {
+          isListening = true;
+          avatar.classList.add("listening");
+          avatar.classList.remove("speaking");
+          status.textContent = "Listening...";
+          status.className = "status listening";
+          talkBtn.classList.add("listening");
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          avatar.classList.remove("listening");
+          talkBtn.classList.remove("listening");
+          if (status.textContent === "Listening...") {
+            status.textContent = "Click the button and speak";
+            status.className = "status";
+          }
+        };
+
+        recognition.onresult = async (event) => {
+          const text = event.results[0][0].transcript;
+          console.log("Recognized:", text);
+          addTranscript("You", text, "user");
+          status.textContent = "Thinking...";
+          status.className = "status";
+
+          try {
+            const response = await sendMessage(text);
+            if (response) {
+              addTranscript(
+                agentSelect.options[agentSelect.selectedIndex].text.slice(2),
+                response,
+                "agent",
+              );
+              speak(response);
+            }
+          } catch (err) {
+            console.error("Error:", err);
+            status.textContent = "Error: " + err.message;
+            status.className = "status error";
+          }
+        };
+
+        recognition.onerror = (event) => {
+          console.error("Recognition error:", event.error);
+          status.textContent = "Error: " + event.error;
+          status.className = "status error";
+          isListening = false;
+          avatar.classList.remove("listening");
+          talkBtn.classList.remove("listening");
+        };
+      }
+
+      // Create room on page load
+      async function initRoom() {
+        try {
+          const res = await fetch(`/voice/join?agent=${currentAgent}&name=user-${Date.now()}`);
+          const data = await res.json();
+          roomName = data.roomName;
+          console.log("Room created:", roomName);
+        } catch (err) {
+          console.error("Failed to create room:", err);
+        }
+      }
+
+      // Send message to server
+      async function sendMessage(text) {
+        const res = await fetch("/voice/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomName, text, agent: currentAgent }),
+        });
+        if (!res.ok) throw new Error("Failed to get response");
+        const data = await res.json();
+        return data.response;
+      }
+
+      // Speak using Web Speech API
+      function speak(text) {
+        synthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+
+        // Try to find a nice female voice
+        const voices = synthesis.getVoices();
+        const preferred =
+          voices.find(
+            (v) =>
+              v.name.includes("Samantha") ||
+              v.name.includes("Karen") ||
+              v.name.includes("Google UK English Female") ||
+              (v.lang.startsWith("en") && v.name.toLowerCase().includes("female")),
+          ) || voices.find((v) => v.lang.startsWith("en"));
+
+        if (preferred) utterance.voice = preferred;
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        utterance.onstart = () => {
+          avatar.classList.add("speaking");
+          avatar.classList.remove("listening");
+          status.textContent = "Speaking...";
+          status.className = "status speaking";
+        };
+
+        utterance.onend = () => {
+          avatar.classList.remove("speaking");
+          status.textContent = "Click the button and speak";
+          status.className = "status";
+        };
+
+        synthesis.speak(utterance);
+      }
+
+      // Add to transcript
+      function addTranscript(speaker, text, type) {
+        const entry = document.createElement("div");
+        entry.className = `transcript-entry ${type}`;
+        entry.innerHTML = `<div class="speaker">${speaker}</div><div>${text}</div>`;
+        transcript.appendChild(entry);
+        transcript.scrollTop = transcript.scrollHeight;
+      }
+
+      // Button handlers
+      talkBtn.addEventListener("mousedown", () => {
+        if (!isListening && recognition) {
+          recognition.start();
+        }
+      });
+
+      talkBtn.addEventListener("mouseup", () => {
+        if (isListening && recognition) {
+          recognition.stop();
+        }
+      });
+
+      talkBtn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        if (!isListening && recognition) {
+          recognition.start();
+        }
+      });
+
+      talkBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        if (isListening && recognition) {
+          recognition.stop();
+        }
+      });
+
+      // Load voices and init
+      synthesis.onvoiceschanged = () => {
+        console.log("Voices loaded:", synthesis.getVoices().length);
+      };
+
+      initRoom();
+    </script>
+  </body>
+</html>
