@@ -26,6 +26,14 @@ const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY!;
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET!;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY!;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+
+// ElevenLabs voice IDs - these are nice female voices
+const elevenLabsVoices: Record<string, string> = {
+  annie: "EXAVITQu4vr4xnSDxMaL", // Bella - warm and friendly
+  siofra: "jBpfuIE2acCO8z3wKNLl", // Gigi - young and gentle
+  aeon: "XB0fDUnXU5powFXDhCwa", // Charlotte - confident and clear
+};
 
 // Validate required env
 const missing: string[] = [];
@@ -45,6 +53,12 @@ if (!ANTHROPIC_API_KEY) {
 
 console.log("🎙️  LiveKit Voice Test (with Agent)");
 console.log("─".repeat(40));
+if (ELEVENLABS_API_KEY) {
+  console.log("🎵 ElevenLabs: configured (pretty voices!)");
+} else {
+  console.log("⚠️  ElevenLabs: not configured (using browser TTS)");
+  console.log("   Add ELEVENLABS_API_KEY for better voices");
+}
 
 // Agent personality configs
 const agentConfigs: Record<string, { name: string; emoji: string; systemPrompt: string }> = {
@@ -403,6 +417,41 @@ const server = http.createServer(async (req, res) => {
     try {
       const response = await generateResponse(session, text);
       console.log(`🗣️  ${agentConfigs[agentId]?.name || "Agent"}: "${response}"`);
+
+      // Generate TTS audio if ElevenLabs is available
+      if (ELEVENLABS_API_KEY) {
+        const voiceId = elevenLabsVoices[agentId] || elevenLabsVoices.annie;
+        console.log(`🎵 Generating ElevenLabs audio...`);
+
+        const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "xi-api-key": ELEVENLABS_API_KEY,
+          },
+          body: JSON.stringify({
+            text: response,
+            model_id: "eleven_multilingual_v2",
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75,
+            },
+          }),
+        });
+
+        if (ttsResponse.ok) {
+          const audioBuffer = await ttsResponse.arrayBuffer();
+          console.log(`✅ Audio generated: ${audioBuffer.byteLength} bytes`);
+
+          const base64Audio = Buffer.from(audioBuffer).toString("base64");
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ response, audio: base64Audio, audioType: "audio/mpeg" }));
+          return;
+        } else {
+          console.error("❌ ElevenLabs error:", await ttsResponse.text());
+        }
+      }
+
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ response }));
     } catch (err) {

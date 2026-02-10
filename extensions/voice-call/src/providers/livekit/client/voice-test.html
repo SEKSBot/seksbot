@@ -242,14 +242,14 @@
           status.className = "status";
 
           try {
-            const response = await sendMessage(text);
-            if (response) {
+            const data = await sendMessage(text);
+            if (data && data.response) {
               addTranscript(
                 agentSelect.options[agentSelect.selectedIndex].text.slice(2),
-                response,
+                data.response,
                 "agent",
               );
-              speak(response);
+              speak(data.response, data.audio, data.audioType);
             }
           } catch (err) {
             console.error("Error:", err);
@@ -289,35 +289,59 @@
         });
         if (!res.ok) throw new Error("Failed to get response");
         const data = await res.json();
-        return data.response;
+        return data; // Return full object with response, audio, audioType
       }
 
-      // Speak using Web Speech API
-      function speak(text) {
-        synthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
+      // Play audio - ElevenLabs or browser TTS fallback
+      let currentAudio = null;
 
-        // Try to find a nice female voice
+      function speak(text, audioData, audioType) {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+        synthesis.cancel();
+
+        avatar.classList.add("speaking");
+        avatar.classList.remove("listening");
+        status.textContent = "Speaking...";
+        status.className = "status speaking";
+
+        if (audioData) {
+          // Play ElevenLabs audio
+          const audio = new Audio(`data:${audioType};base64,${audioData}`);
+          currentAudio = audio;
+
+          audio.onended = () => {
+            avatar.classList.remove("speaking");
+            status.textContent = "Click the button and speak";
+            status.className = "status";
+            currentAudio = null;
+          };
+
+          audio.onerror = () => {
+            console.error("Audio error, falling back to browser TTS");
+            speakBrowser(text);
+          };
+
+          audio.play().catch(() => speakBrowser(text));
+        } else {
+          speakBrowser(text);
+        }
+      }
+
+      function speakBrowser(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
         const voices = synthesis.getVoices();
         const preferred =
           voices.find(
             (v) =>
               v.name.includes("Samantha") ||
               v.name.includes("Karen") ||
-              v.name.includes("Google UK English Female") ||
               (v.lang.startsWith("en") && v.name.toLowerCase().includes("female")),
           ) || voices.find((v) => v.lang.startsWith("en"));
 
         if (preferred) utterance.voice = preferred;
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-
-        utterance.onstart = () => {
-          avatar.classList.add("speaking");
-          avatar.classList.remove("listening");
-          status.textContent = "Speaking...";
-          status.className = "status speaking";
-        };
 
         utterance.onend = () => {
           avatar.classList.remove("speaking");
