@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Chat - seksbot</title>
+    <style>
+      :root {
+        --bg: #1a1a2e;
+        --surface: #16213e;
+        --surface-2: #1f2b47;
+        --primary: #e94560;
+        --primary-dim: #c73e54;
+        --accent: #3b82f6;
+        --text: #eee;
+        --text-muted: #888;
+        --success: #22c55e;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Header */
+      .header {
+        background: var(--surface);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--surface-2);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+      .header .subtitle {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+      .connection-status {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+      }
+      .status-dot.connected {
+        background: var(--success);
+      }
+      .status-dot.error {
+        background: var(--primary);
+      }
+
+      /* Session Selector */
+      .session-panel {
+        background: var(--surface);
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--surface-2);
+      }
+      .session-panel.hidden {
+        display: none;
+      }
+      .session-panel h2 {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+      }
+      .session-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 0.75rem;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .session-card {
+        background: var(--surface-2);
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+      }
+      .session-card:hover {
+        border-color: var(--accent);
+      }
+      .session-card.selected {
+        border-color: var(--primary);
+        background: rgba(233, 69, 96, 0.1);
+      }
+      .session-card .key {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-family: monospace;
+        word-break: break-all;
+      }
+      .session-card .label {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+      .session-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+      .btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.375rem;
+        border: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--primary-dim);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-secondary {
+        background: var(--surface-2);
+        color: var(--text);
+      }
+      .btn-secondary:hover {
+        background: #2a3a5a;
+      }
+
+      /* Main Voice UI */
+      .main-ui {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        gap: 1.5rem;
+      }
+      .main-ui.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .current-session {
+        text-align: center;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+      }
+      .current-session .key {
+        font-family: monospace;
+        color: var(--accent);
+      }
+
+      .agent-select {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .agent-btn {
+        padding: 0.5rem 1rem;
+        background: var(--surface);
+        border: 2px solid var(--surface-2);
+        border-radius: 0.5rem;
+        color: var(--text);
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .agent-btn:hover {
+        border-color: var(--accent);
+      }
+      .agent-btn.selected {
+        border-color: var(--primary);
+        background: rgba(233, 69, 96, 0.1);
+      }
+
+      .avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        border: 4px solid var(--surface-2);
+        transition: all 0.3s;
+      }
+      .avatar.listening {
+        border-color: var(--accent);
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+      }
+      .avatar.speaking {
+        border-color: var(--primary);
+        box-shadow: 0 0 30px rgba(233, 69, 96, 0.4);
+        animation: pulse 0.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .status-text {
+        font-size: 1rem;
+        min-height: 1.5em;
+      }
+      .status-text.listening {
+        color: var(--accent);
+      }
+      .status-text.speaking {
+        color: var(--primary);
+      }
+      .status-text.error {
+        color: #ef4444;
+      }
+
+      .talk-btn {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-size: 1.75rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .talk-btn:hover {
+        transform: scale(1.1);
+      }
+      .talk-btn:active {
+        transform: scale(0.95);
+      }
+      .talk-btn.listening {
+        background: var(--accent);
+      }
+
+      /* Transcript */
+      .transcript {
+        width: 100%;
+        max-width: 600px;
+        background: var(--surface);
+        border-radius: 0.5rem;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      .transcript-entry {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--surface-2);
+      }
+      .transcript-entry:last-child {
+        border-bottom: none;
+      }
+      .transcript-entry.user {
+        background: rgba(59, 130, 246, 0.1);
+      }
+      .transcript-entry.agent {
+        background: rgba(233, 69, 96, 0.1);
+      }
+      .transcript-entry .speaker {
+        font-size: 0.75rem;
+        font-weight: 600;
+        opacity: 0.7;
+        margin-bottom: 0.25rem;
+      }
+
+      .hint {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div>
+        <h1>🎙️ Voice Chat</h1>
+        <span class="subtitle">Talk to AI Sisters</span>
+      </div>
+      <div class="connection-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="connectionText">Not connected</span>
+      </div>
+    </header>
+
+    <div class="session-panel" id="sessionPanel">
+      <h2>Select a session to attach to:</h2>
+      <div class="session-grid" id="sessionGrid">
+        <div class="session-card" style="opacity: 0.5">Loading sessions...</div>
+      </div>
+      <div class="session-actions">
+        <button class="btn btn-primary" id="attachBtn" disabled>Attach to Session</button>
+        <button class="btn btn-secondary" id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+
+    <main class="main-ui disabled" id="mainUI">
+      <div class="current-session" id="currentSession">Attached to: <span class="key">—</span></div>
+
+      <div class="agent-select">
+        <button class="agent-btn selected" data-agent="annie">🌙 Annie</button>
+        <button class="agent-btn" data-agent="siofra">🌿 Síofra</button>
+        <button class="agent-btn" data-agent="aeon">⚡ Aeon</button>
+      </div>
+
+      <div class="avatar" id="avatar">🌙</div>
+      <div class="status-text" id="statusText">Hold to speak</div>
+
+      <button class="talk-btn" id="talkBtn">🎤</button>
+
+      <div class="transcript" id="transcript"></div>
+
+      <p class="hint">Hold the button and speak. Release to send.</p>
+    </main>
+
+    <script>
+      const sessionPanel = document.getElementById("sessionPanel");
+      const sessionGrid = document.getElementById("sessionGrid");
+      const attachBtn = document.getElementById("attachBtn");
+      const refreshBtn = document.getElementById("refreshBtn");
+      const mainUI = document.getElementById("mainUI");
+      const currentSession = document.getElementById("currentSession");
+      const avatar = document.getElementById("avatar");
+      const statusText = document.getElementById("statusText");
+      const talkBtn = document.getElementById("talkBtn");
+      const transcript = document.getElementById("transcript");
+      const statusDot = document.getElementById("statusDot");
+      const connectionText = document.getElementById("connectionText");
+      const agentBtns = document.querySelectorAll(".agent-btn");
+
+      const emojis = { annie: "🌙", siofra: "🌿", aeon: "⚡" };
+      let selectedSessionKey = null;
+      let voiceSessionId = null;
+      let currentAgent = "annie";
+      let recognition = null;
+      let isListening = false;
+      let currentAudio = null;
+
+      // Agent selection
+      agentBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          agentBtns.forEach((b) => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          currentAgent = btn.dataset.agent;
+          avatar.textContent = emojis[currentAgent];
+        });
+      });
+
+      // Speech recognition setup
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        statusText.textContent = "Speech recognition not supported";
+        statusText.classList.add("error");
+        talkBtn.disabled = true;
+      } else {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = "en-US";
+
+        recognition.onstart = () => {
+          isListening = true;
+          avatar.classList.add("listening");
+          avatar.classList.remove("speaking");
+          statusText.textContent = "Listening...";
+          statusText.className = "status-text listening";
+          talkBtn.classList.add("listening");
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          avatar.classList.remove("listening");
+          talkBtn.classList.remove("listening");
+          if (statusText.textContent === "Listening...") {
+            statusText.textContent = "Hold to speak";
+            statusText.className = "status-text";
+          }
+        };
+
+        recognition.onresult = async (event) => {
+          const text = event.results[0][0].transcript;
+          addTranscript("You", text, "user");
+          statusText.textContent = "Thinking...";
+          statusText.className = "status-text";
+
+          try {
+            const response = await sendMessage(text);
+            if (response.response) {
+              const agentName = currentAgent.charAt(0).toUpperCase() + currentAgent.slice(1);
+              addTranscript(agentName, response.response, "agent");
+              speak(response.response, response.audio, response.audioType);
+            }
+          } catch (err) {
+            console.error("Error:", err);
+            statusText.textContent = "Error: " + err.message;
+            statusText.classList.add("error");
+          }
+        };
+
+        recognition.onerror = (event) => {
+          console.error("Recognition error:", event.error);
+          statusText.textContent = "Error: " + event.error;
+          statusText.classList.add("error");
+          isListening = false;
+          avatar.classList.remove("listening");
+          talkBtn.classList.remove("listening");
+        };
+      }
+
+      // Load sessions
+      async function loadSessions() {
+        sessionGrid.innerHTML = '<div class="session-card" style="opacity: 0.5;">Loading...</div>';
+        try {
+          const res = await fetch("/voice/sessions");
+          const data = await res.json();
+
+          if (!data.sessions || data.sessions.length === 0) {
+            sessionGrid.innerHTML =
+              '<div class="session-card" style="opacity: 0.5;">No sessions found</div>';
+            return;
+          }
+
+          sessionGrid.innerHTML = "";
+          data.sessions.forEach((session) => {
+            const card = document.createElement("div");
+            card.className = "session-card";
+            card.dataset.key = session.key;
+            card.innerHTML = `
+            <div class="label">${session.displayName || session.label || "Session"}</div>
+            <div class="key">${session.key}</div>
+          `;
+            card.addEventListener("click", () => {
+              document
+                .querySelectorAll(".session-card")
+                .forEach((c) => c.classList.remove("selected"));
+              card.classList.add("selected");
+              selectedSessionKey = session.key;
+              attachBtn.disabled = false;
+            });
+            sessionGrid.appendChild(card);
+          });
+        } catch (err) {
+          console.error("Failed to load sessions:", err);
+          sessionGrid.innerHTML =
+            '<div class="session-card" style="opacity: 0.5;">Failed to load sessions</div>';
+        }
+      }
+
+      // Attach to session
+      async function attachSession() {
+        if (!selectedSessionKey) return;
+
+        try {
+          const res = await fetch("/voice/attach", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionKey: selectedSessionKey, agent: currentAgent }),
+          });
+          const data = await res.json();
+
+          if (data.error) {
+            alert("Failed to attach: " + data.error);
+            return;
+          }
+
+          voiceSessionId = data.voiceSessionId;
+          sessionPanel.classList.add("hidden");
+          mainUI.classList.remove("disabled");
+          currentSession.querySelector(".key").textContent = selectedSessionKey;
+          statusDot.classList.add("connected");
+          connectionText.textContent = "Connected";
+        } catch (err) {
+          console.error("Attach error:", err);
+          alert("Failed to attach: " + err.message);
+        }
+      }
+
+      // Send message
+      async function sendMessage(text) {
+        const res = await fetch("/voice/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text,
+            voiceSessionId,
+            sessionKey: selectedSessionKey,
+            agent: currentAgent,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Request failed");
+        }
+        return res.json();
+      }
+
+      // Play audio
+      function speak(text, audioData, audioType) {
+        if (currentAudio) {
+          currentAudio.pause();
+          currentAudio = null;
+        }
+        window.speechSynthesis.cancel();
+
+        avatar.classList.add("speaking");
+        avatar.classList.remove("listening");
+        statusText.textContent = "Speaking...";
+        statusText.className = "status-text speaking";
+
+        const onEnd = () => {
+          avatar.classList.remove("speaking");
+          statusText.textContent = "Hold to speak";
+          statusText.className = "status-text";
+          currentAudio = null;
+        };
+
+        if (audioData) {
+          const audio = new Audio(`data:${audioType};base64,${audioData}`);
+          currentAudio = audio;
+          audio.onended = onEnd;
+          audio.onerror = () => speakBrowser(text, onEnd);
+          audio.play().catch(() => speakBrowser(text, onEnd));
+        } else {
+          speakBrowser(text, onEnd);
+        }
+      }
+
+      function speakBrowser(text, onEnd) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        const preferred =
+          voices.find(
+            (v) =>
+              v.name.includes("Samantha") ||
+              v.name.includes("Karen") ||
+              (v.lang.startsWith("en") && v.name.toLowerCase().includes("female")),
+          ) || voices.find((v) => v.lang.startsWith("en"));
+        if (preferred) utterance.voice = preferred;
+        utterance.onend = onEnd;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      // Add transcript entry
+      function addTranscript(speaker, text, type) {
+        const entry = document.createElement("div");
+        entry.className = `transcript-entry ${type}`;
+        entry.innerHTML = `<div class="speaker">${speaker}</div><div>${text}</div>`;
+        transcript.appendChild(entry);
+        transcript.scrollTop = transcript.scrollHeight;
+      }
+
+      // Button handlers
+      talkBtn.addEventListener("mousedown", () => {
+        if (!isListening && recognition && voiceSessionId) recognition.start();
+      });
+      talkBtn.addEventListener("mouseup", () => {
+        if (isListening && recognition) recognition.stop();
+      });
+      talkBtn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        if (!isListening && recognition && voiceSessionId) recognition.start();
+      });
+      talkBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        if (isListening && recognition) recognition.stop();
+      });
+
+      attachBtn.addEventListener("click", attachSession);
+      refreshBtn.addEventListener("click", loadSessions);
+
+      // Load voices and sessions on start
+      window.speechSynthesis.onvoiceschanged = () => {};
+      loadSessions();
+    </script>
+  </body>
+</html>
