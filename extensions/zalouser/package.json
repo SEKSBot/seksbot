@@ -5,10 +5,10 @@
   "type": "module",
   "dependencies": {
     "@sinclair/typebox": "0.34.48",
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
   "openclaw": {
     "extensions": [

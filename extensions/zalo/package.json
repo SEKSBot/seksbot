@@ -4,11 +4,11 @@
   "description": "OpenClaw Zalo channel plugin",
   "type": "module",
   "dependencies": {
-    "openclaw": "workspace:*",
+    "seksbot": "workspace:*",
     "undici": "7.21.0"
   },
   "devDependencies": {
-    "openclaw": "workspace:*"
+    "seksbot": "workspace:*"
   },
   "openclaw": {
     "extensions": [
