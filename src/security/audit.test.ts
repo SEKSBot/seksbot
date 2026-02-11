@@ -1038,16 +1038,17 @@ describe("security audit", () => {
       probeGatewayFn: async (opts) => successfulProbeResult(opts.url),
     });
 
+    // skill-scanner is deprecated (no-op stub) — no code_safety findings expected
     expect(
       deepRes.findings.some(
         (f) => f.checkId === "plugins.code_safety" && f.severity === "critical",
       ),
-    ).toBe(true);
+    ).toBe(false);
 
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => undefined);
   });
 
-  it("reports detailed code-safety issues for both plugins and skills", async () => {
+  it("reports no code-safety issues when skill scanner is deprecated", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "seksbot-audit-scanner-"));
     const workspaceDir = path.join(tmpDir, "workspace");
     const pluginDir = path.join(tmpDir, "extensions", "evil-plugin");
@@ -1093,19 +1094,16 @@ description: test skill
       probeGatewayFn: async (opts) => successfulProbeResult(opts.url),
     });
 
+    // skill-scanner is deprecated — no code_safety findings for plugins or skills
     const pluginFinding = deepRes.findings.find(
       (finding) => finding.checkId === "plugins.code_safety" && finding.severity === "critical",
     );
-    expect(pluginFinding).toBeDefined();
-    expect(pluginFinding?.detail).toContain("dangerous-exec");
-    expect(pluginFinding?.detail).toMatch(/\.hidden[\\/]+index\.js:\d+/);
+    expect(pluginFinding).toBeUndefined();
 
     const skillFinding = deepRes.findings.find(
       (finding) => finding.checkId === "skills.code_safety" && finding.severity === "critical",
     );
-    expect(skillFinding).toBeDefined();
-    expect(skillFinding?.detail).toContain("dangerous-exec");
-    expect(skillFinding?.detail).toMatch(/runner\.js:\d+/);
+    expect(skillFinding).toBeUndefined();
 
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => undefined);
   });
