@@ -48,8 +48,7 @@ RUN pnpm install --frozen-lockfile
 
 # Copy source and build
 COPY . .
-RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
-ENV OPENCLAW_PREFER_PNPM=1
+RUN SEKSBOT_A2UI_SKIP_MISSING=1 pnpm build
 RUN pnpm ui:build
 
 # ─── Stage 3: Production runtime ────────────────────────────────────────────────
