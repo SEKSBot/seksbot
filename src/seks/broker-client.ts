@@ -1,123 +1,162 @@
-/**
- * SEKS Broker Client
- *
- * When configured, all external auth flows through the SEKS broker.
- * The agent holds only a broker token; the broker injects real API keys.
- *
- * Spike / proof-of-concept — not wired into the main auth path yet.
- */
+import { exec } from "child_process";
+import { promisify } from "util";
+import type {
+  AgentCapabilities,
+  BrokerAuthVerifyRequest,
+  BrokerAuthVerifyResponse,
+  BrokerError,
+  BrokerProxyRequestOptions,
+  ChannelTokens,
+} from "./types.js";
 
-export type SeksBrokerConfig = {
-  /** Broker base URL (e.g. "https://broker.seks.local") */
-  url: string;
-  /** Static broker token (mutually exclusive with tokenCommand) */
-  token?: string;
-  /** Shell command to retrieve broker token (e.g. "seksh get-token --agent footgun") */
-  tokenCommand?: string;
-};
-
-export type ChannelTokens = Record<string, string>;
-
-export type ProxyTarget = {
-  /** Provider ID (e.g. "anthropic", "openai", "google") */
-  providerId: string;
-  /** The base URL the agent should use for this provider's API */
-  baseUrl: string;
-  /** The token to send (broker token — broker swaps it for the real key) */
-  apiKey: string;
-};
-
-let cachedToken: string | null = null;
-let cachedConfig: SeksBrokerConfig | null = null;
+const execAsync = promisify(exec);
 
 /**
- * Resolve the broker token, using cache, static config, or tokenCommand.
+ * Client for SEKS Broker API
+ * Handles token resolution, API proxying, and capability management
  */
-async function resolveBrokerToken(config: SeksBrokerConfig): Promise<string> {
-  if (cachedToken && cachedConfig === config) {
-    return cachedToken;
+export class BrokerClient {
+  private brokerUrl: string;
+  private token?: string;
+  private tokenCommand?: string;
+  private cachedToken?: string;
+
+  constructor(brokerUrl: string, token?: string, tokenCommand?: string) {
+    this.brokerUrl = brokerUrl.replace(/\/$/, ""); // remove trailing slash
+    this.token = token;
+    this.tokenCommand = tokenCommand;
   }
 
-  if (config.token) {
-    cachedToken = config.token;
-    cachedConfig = config;
-    return config.token;
-  }
-
-  if (config.tokenCommand) {
-    const { execSync } = await import("node:child_process");
-    const result = execSync(config.tokenCommand, {
-      encoding: "utf8",
-      timeout: 10_000,
-    }).trim();
-    if (!result) {
-      throw new Error(`seksh tokenCommand returned empty result: ${config.tokenCommand}`);
+  /**
+   * Resolve broker token from config.token or by running config.tokenCommand
+   * Caches in memory, never writes to disk
+   */
+  private async resolveToken(): Promise<string> {
+    if (this.cachedToken) {
+      return this.cachedToken;
     }
-    cachedToken = result;
-    cachedConfig = config;
-    return result;
+
+    if (this.token) {
+      this.cachedToken = this.token;
+      return this.token;
+    }
+
+    if (this.tokenCommand) {
+      try {
+        const { stdout } = await execAsync(this.tokenCommand, {
+          timeout: 10000, // 10s timeout
+        });
+        this.cachedToken = stdout.trim();
+        return this.cachedToken;
+      } catch (error) {
+        throw new Error(`Failed to execute tokenCommand: ${error}`);
+      }
+    }
+
+    throw new Error("No broker token configured (token or tokenCommand required)");
   }
 
-  throw new Error("SEKS broker config has neither token nor tokenCommand");
-}
+  /**
+   * Make authenticated HTTP request to broker
+   */
+  private async request<T>(
+    path: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const token = await this.resolveToken();
+    const url = `${this.brokerUrl}${path}`;
 
-/**
- * Build a proxy target for a given provider.
- * The agent uses this baseUrl + apiKey instead of direct provider credentials.
- */
-export async function resolveProxyTarget(
-  config: SeksBrokerConfig,
-  providerId: string,
-): Promise<ProxyTarget> {
-  const token = await resolveBrokerToken(config);
-  const baseUrl = `${config.url.replace(/\/+$/, "")}/v1/proxy/${providerId}`;
-  return { providerId, baseUrl, apiKey: token };
-}
-
-/**
- * Fetch channel tokens (Discord, Telegram, etc.) from the broker.
- * Tokens are held in-memory only, never written to disk.
- */
-export async function fetchChannelTokens(config: SeksBrokerConfig): Promise<ChannelTokens> {
-  const token = await resolveBrokerToken(config);
-  const url = `${config.url.replace(/\/+$/, "")}/v1/tokens/channels`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    throw new Error(`SEKS broker /v1/tokens/channels failed: ${res.status} ${res.statusText}`);
-  }
-  return (await res.json()) as ChannelTokens;
-}
-
-/**
- * Verify the agent's broker token is valid.
- */
-export async function verifyBrokerToken(config: SeksBrokerConfig): Promise<boolean> {
-  try {
-    const token = await resolveBrokerToken(config);
-    const url = `${config.url.replace(/\/+$/, "")}/v1/auth/verify`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
     });
-    return res.ok;
-  } catch {
-    return false;
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const brokerError: BrokerError = {
+        error: errorData.error || `HTTP ${response.status}`,
+        code: errorData.code,
+        statusCode: response.status,
+      };
+      throw new Error(`Broker request failed: ${JSON.stringify(brokerError)}`);
+    }
+
+    return response.json();
   }
-}
 
-/**
- * Invalidate the cached broker token (e.g. after rotation or error).
- */
-export function clearBrokerTokenCache(): void {
-  cachedToken = null;
-  cachedConfig = null;
-}
+  /**
+   * Build proxy URL for provider API calls
+   */
+  proxyUrl(provider: string, path: string): string {
+    // Remove leading slash from path if present
+    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+    return `${this.brokerUrl}/v1/proxy/${provider}/${cleanPath}`;
+  }
 
-/**
- * Check whether a SEKS broker is configured.
- */
-export function isBrokerConfigured(config?: SeksBrokerConfig | null): config is SeksBrokerConfig {
-  return !!config?.url && !!(config.token || config.tokenCommand);
+  /**
+   * Make proxied request to provider API through broker
+   * Returns the raw Response for flexibility in handling different content types
+   */
+  async proxyRequest(
+    provider: string,
+    path: string,
+    options: BrokerProxyRequestOptions = {}
+  ): Promise<Response> {
+    const token = await this.resolveToken();
+    const url = this.proxyUrl(provider, path);
+
+    return fetch(url, {
+      method: options.method || "GET",
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      },
+      body: options.body,
+    });
+  }
+
+  /**
+   * Fetch channel tokens for this agent
+   */
+  async getChannelTokens(): Promise<ChannelTokens> {
+    return this.request<ChannelTokens>("/v1/tokens/channels");
+  }
+
+  /**
+   * Fetch free-form secret with custom/ prefix
+   */
+  async getCustomSecret(key: string): Promise<string> {
+    const response = await this.request<{ value: string }>(`/v1/secrets/custom/${key}`);
+    return response.value;
+  }
+
+  /**
+   * List agent capabilities
+   */
+  async getCapabilities(): Promise<AgentCapabilities> {
+    return this.request<AgentCapabilities>("/v1/agent/capabilities");
+  }
+
+  /**
+   * Verify agent token
+   */
+  async verifyToken(): Promise<BrokerAuthVerifyResponse> {
+    const token = await this.resolveToken();
+    return this.request<BrokerAuthVerifyResponse>("/v1/auth/verify", {
+      method: "POST",
+      body: JSON.stringify({ token } as BrokerAuthVerifyRequest),
+    });
+  }
+
+  /**
+   * Clear cached token (e.g., if token expires)
+   */
+  clearTokenCache(): void {
+    this.cachedToken = undefined;
+  }
 }

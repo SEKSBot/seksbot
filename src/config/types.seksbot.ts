@@ -97,6 +97,13 @@ export type seksbotConfig = {
   talk?: TalkConfig;
   gateway?: GatewayConfig;
   memory?: MemoryConfig;
+  seks?: {
+    broker?: {
+      url?: string;        // e.g. "https://seks-broker.stcredzero.workers.dev"
+      token?: string;      // the agent's broker token
+      tokenCommand?: string; // e.g. "seksh get-token --agent siofra"
+    };
+  };
 };
 
 export type ConfigValidationIssue = {
