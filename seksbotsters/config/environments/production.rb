@@ -66,10 +66,14 @@ Rails.application.configure do
 
   # Rails log goes to stdout for hatchbox UI and a file for grep.
   # https://hatchbox.relationkit.io/articles/61-accessing-your-server-logs-in-hatchbox
-  config.logger = ActiveSupport::BroadcastLogger.new(
-    ActiveSupport::Logger.new($stdout),
-    ActiveSupport::Logger.new(Rails.root.join("log/rails.log"))
-  )
+  if ENV["RAILS_LOG_TO_STDOUT"].present?
+    config.logger = ActiveSupport::Logger.new($stdout)
+  else
+    config.logger = ActiveSupport::BroadcastLogger.new(
+      ActiveSupport::Logger.new($stdout),
+      ActiveSupport::Logger.new(Rails.root.join("log/rails.log"))
+    )
+  end
   config.logger.formatter = config.log_formatter
 
   # see config/initializers/lograge.rb for json action logs

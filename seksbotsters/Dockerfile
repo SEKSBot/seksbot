@@ -25,7 +25,8 @@ RUN gem install bundler && bundle config set without 'development test' && bundl
 
 COPY . .
 
-RUN bundle exec rails assets:precompile 2>/dev/null || true
+RUN mkdir -p log storage tmp/pids tmp/cache tmp/sockets && \
+    bundle exec rails assets:precompile 2>/dev/null || true
 
 EXPOSE 3000
 
