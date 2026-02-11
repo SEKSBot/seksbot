@@ -21,4 +21,8 @@ seksbot logs
 seksbot logs --follow
 seksbot logs --json
 seksbot logs --limit 500
+seksbot logs --local-time
+seksbot logs --follow --local-time
 ```
+
+Use `--local-time` to render timestamps in your local timezone.

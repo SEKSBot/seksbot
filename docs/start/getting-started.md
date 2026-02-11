@@ -34,6 +34,11 @@ Check your Node version with `node --version` if you are unsure.
         ```bash
         curl -fsSL https://seksbot.ai/install.sh | bash
         ```
+        <img
+  src="/assets/install-script.svg"
+  alt="Install Script Process"
+  className="rounded-lg"
+/>
       </Tab>
       <Tab title="Windows (PowerShell)">
         ```powershell

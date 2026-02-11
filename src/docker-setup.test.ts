@@ -7,6 +7,13 @@ import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 
+type DockerSetupSandbox = {
+  rootDir: string;
+  scriptPath: string;
+  logPath: string;
+  binDir: string;
+};
+
 async function writeDockerStub(binDir: string, logPath: string) {
   const stub = `#!/usr/bin/env bash
 set -euo pipefail
@@ -31,105 +38,147 @@ exit 0
   await writeFile(logPath, "");
 }
 
+async function createDockerSetupSandbox(): Promise<DockerSetupSandbox> {
+  const rootDir = await mkdtemp(join(tmpdir(), "seksbot-docker-setup-"));
+  const scriptPath = join(rootDir, "docker-setup.sh");
+  const dockerfilePath = join(rootDir, "Dockerfile");
+  const composePath = join(rootDir, "docker-compose.yml");
+  const binDir = join(rootDir, "bin");
+  const logPath = join(rootDir, "docker-stub.log");
+
+  const script = await readFile(join(repoRoot, "docker-setup.sh"), "utf8");
+  await writeFile(scriptPath, script, { mode: 0o755 });
+  await writeFile(dockerfilePath, "FROM scratch\n");
+  await writeFile(
+    composePath,
+    "services:\n  seksbot-gateway:\n    image: noop\n  seksbot-cli:\n    image: noop\n",
+  );
+  await writeDockerStub(binDir, logPath);
+
+  return { rootDir, scriptPath, logPath, binDir };
+}
+
+function createEnv(
+  sandbox: DockerSetupSandbox,
+  overrides: Record<string, string | undefined> = {},
+): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    PATH: `${sandbox.binDir}:${process.env.PATH ?? ""}`,
+    DOCKER_STUB_LOG: sandbox.logPath,
+    SEKSBOT_GATEWAY_TOKEN: "test-token",
+    SEKSBOT_CONFIG_DIR: join(sandbox.rootDir, "config"),
+    SEKSBOT_WORKSPACE_DIR: join(sandbox.rootDir, "seksbot"),
+    ...overrides,
+  };
+}
+
+function resolveBashForCompatCheck(): string | null {
+  for (const candidate of ["/bin/bash", "bash"]) {
+    const probe = spawnSync(candidate, ["-c", "exit 0"], { encoding: "utf8" });
+    if (!probe.error && probe.status === 0) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 describe("docker-setup.sh", () => {
   it("handles unset optional env vars under strict mode", async () => {
-    const assocCheck = spawnSync("bash", ["-c", "declare -A _t=()"], {
-      encoding: "utf8",
+    const sandbox = await createDockerSetupSandbox();
+    const env = createEnv(sandbox, {
+      SEKSBOT_DOCKER_APT_PACKAGES: undefined,
+      SEKSBOT_EXTRA_MOUNTS: undefined,
+      SEKSBOT_HOME_VOLUME: undefined,
     });
-    if (assocCheck.status !== 0) {
-      return;
-    }
 
-    const rootDir = await mkdtemp(join(tmpdir(), "seksbot-docker-setup-"));
-    const scriptPath = join(rootDir, "docker-setup.sh");
-    const dockerfilePath = join(rootDir, "Dockerfile");
-    const composePath = join(rootDir, "docker-compose.yml");
-    const binDir = join(rootDir, "bin");
-    const logPath = join(rootDir, "docker-stub.log");
-
-    const script = await readFile(join(repoRoot, "docker-setup.sh"), "utf8");
-    await writeFile(scriptPath, script, { mode: 0o755 });
-    await writeFile(dockerfilePath, "FROM scratch\n");
-    await writeFile(
-      composePath,
-      "services:\n  seksbot-gateway:\n    image: noop\n  seksbot-cli:\n    image: noop\n",
-    );
-    await writeDockerStub(binDir, logPath);
-
-    const env = {
-      ...process.env,
-      PATH: `${binDir}:${process.env.PATH ?? ""}`,
-      DOCKER_STUB_LOG: logPath,
-      SEKSBOT_GATEWAY_TOKEN: "test-token",
-      SEKSBOT_CONFIG_DIR: join(rootDir, "config"),
-      SEKSBOT_WORKSPACE_DIR: join(rootDir, "seksbot"),
-    };
-    delete env.SEKSBOT_DOCKER_APT_PACKAGES;
-    delete env.SEKSBOT_EXTRA_MOUNTS;
-    delete env.SEKSBOT_HOME_VOLUME;
-
-    const result = spawnSync("bash", [scriptPath], {
-      cwd: rootDir,
+    const result = spawnSync("bash", [sandbox.scriptPath], {
+      cwd: sandbox.rootDir,
       env,
       encoding: "utf8",
     });
 
     expect(result.status).toBe(0);
 
-    const envFile = await readFile(join(rootDir, ".env"), "utf8");
+    const envFile = await readFile(join(sandbox.rootDir, ".env"), "utf8");
     expect(envFile).toContain("SEKSBOT_DOCKER_APT_PACKAGES=");
     expect(envFile).toContain("SEKSBOT_EXTRA_MOUNTS=");
     expect(envFile).toContain("SEKSBOT_HOME_VOLUME=");
   });
 
-  it("plumbs SEKSBOT_DOCKER_APT_PACKAGES into .env and docker build args", async () => {
-    const assocCheck = spawnSync("bash", ["-c", "declare -A _t=()"], {
-      encoding: "utf8",
-    });
-    if (assocCheck.status !== 0) {
-      return;
-    }
-
-    const rootDir = await mkdtemp(join(tmpdir(), "seksbot-docker-setup-"));
-    const scriptPath = join(rootDir, "docker-setup.sh");
-    const dockerfilePath = join(rootDir, "Dockerfile");
-    const composePath = join(rootDir, "docker-compose.yml");
-    const binDir = join(rootDir, "bin");
-    const logPath = join(rootDir, "docker-stub.log");
-
-    const script = await readFile(join(repoRoot, "docker-setup.sh"), "utf8");
-    await writeFile(scriptPath, script, { mode: 0o755 });
-    await writeFile(dockerfilePath, "FROM scratch\n");
-    await writeFile(
-      composePath,
-      "services:\n  seksbot-gateway:\n    image: noop\n  seksbot-cli:\n    image: noop\n",
-    );
-    await writeDockerStub(binDir, logPath);
-
-    const env = {
-      ...process.env,
-      PATH: `${binDir}:${process.env.PATH ?? ""}`,
-      DOCKER_STUB_LOG: logPath,
-      SEKSBOT_DOCKER_APT_PACKAGES: "ffmpeg build-essential",
-      SEKSBOT_GATEWAY_TOKEN: "test-token",
-      SEKSBOT_CONFIG_DIR: join(rootDir, "config"),
-      SEKSBOT_WORKSPACE_DIR: join(rootDir, "seksbot"),
+  it("supports a home volume when extra mounts are empty", async () => {
+    const sandbox = await createDockerSetupSandbox();
+    const env = createEnv(sandbox, {
       SEKSBOT_EXTRA_MOUNTS: "",
-      SEKSBOT_HOME_VOLUME: "",
-    };
+      SEKSBOT_HOME_VOLUME: "seksbot-home",
+    });
 
-    const result = spawnSync("bash", [scriptPath], {
-      cwd: rootDir,
+    const result = spawnSync("bash", [sandbox.scriptPath], {
+      cwd: sandbox.rootDir,
       env,
       encoding: "utf8",
     });
 
     expect(result.status).toBe(0);
 
-    const envFile = await readFile(join(rootDir, ".env"), "utf8");
+    const extraCompose = await readFile(join(sandbox.rootDir, "docker-compose.extra.yml"), "utf8");
+    expect(extraCompose).toContain("seksbot-home:/home/node");
+    expect(extraCompose).toContain("volumes:");
+    expect(extraCompose).toContain("seksbot-home:");
+  });
+
+  it("avoids associative arrays so the script remains Bash 3.2-compatible", async () => {
+    const script = await readFile(join(repoRoot, "docker-setup.sh"), "utf8");
+    expect(script).not.toMatch(/^\s*declare -A\b/m);
+
+    const systemBash = resolveBashForCompatCheck();
+    if (!systemBash) {
+      return;
+    }
+
+    const assocCheck = spawnSync(systemBash, ["-c", "declare -A _t=()"], {
+      encoding: "utf8",
+    });
+    if (assocCheck.status === null || assocCheck.status === 0) {
+      return;
+    }
+
+    const sandbox = await createDockerSetupSandbox();
+    const env = createEnv(sandbox, {
+      SEKSBOT_EXTRA_MOUNTS: "",
+      SEKSBOT_HOME_VOLUME: "",
+    });
+    const result = spawnSync(systemBash, [sandbox.scriptPath], {
+      cwd: sandbox.rootDir,
+      env,
+      encoding: "utf8",
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).not.toContain("declare: -A: invalid option");
+  });
+
+  it("plumbs SEKSBOT_DOCKER_APT_PACKAGES into .env and docker build args", async () => {
+    const sandbox = await createDockerSetupSandbox();
+    const env = createEnv(sandbox, {
+      SEKSBOT_DOCKER_APT_PACKAGES: "ffmpeg build-essential",
+      SEKSBOT_EXTRA_MOUNTS: "",
+      SEKSBOT_HOME_VOLUME: "",
+    });
+
+    const result = spawnSync("bash", [sandbox.scriptPath], {
+      cwd: sandbox.rootDir,
+      env,
+      encoding: "utf8",
+    });
+
+    expect(result.status).toBe(0);
+
+    const envFile = await readFile(join(sandbox.rootDir, ".env"), "utf8");
     expect(envFile).toContain("SEKSBOT_DOCKER_APT_PACKAGES=ffmpeg build-essential");
 
-    const log = await readFile(logPath, "utf8");
+    const log = await readFile(sandbox.logPath, "utf8");
     expect(log).toContain("--build-arg SEKSBOT_DOCKER_APT_PACKAGES=ffmpeg build-essential");
   });
 

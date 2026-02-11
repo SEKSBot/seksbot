@@ -4,10 +4,13 @@ import { __testing } from "./web-search.js";
 const {
   inferPerplexityBaseUrlFromApiKey,
   resolvePerplexityBaseUrl,
+  isDirectPerplexityBaseUrl,
+  resolvePerplexityRequestModel,
   normalizeFreshness,
   resolveGrokApiKey,
   resolveGrokModel,
   resolveGrokInlineCitations,
+  extractGrokContent,
 } = __testing;
 
 describe("web_search perplexity baseUrl defaults", () => {
@@ -54,6 +57,32 @@ describe("web_search perplexity baseUrl defaults", () => {
   it("defaults to OpenRouter for unknown config key formats", () => {
     expect(resolvePerplexityBaseUrl(undefined, "config", "weird-key")).toBe(
       "https://openrouter.ai/api/v1",
+    );
+  });
+});
+
+describe("web_search perplexity model normalization", () => {
+  it("detects direct Perplexity host", () => {
+    expect(isDirectPerplexityBaseUrl("https://api.perplexity.ai")).toBe(true);
+    expect(isDirectPerplexityBaseUrl("https://api.perplexity.ai/")).toBe(true);
+    expect(isDirectPerplexityBaseUrl("https://openrouter.ai/api/v1")).toBe(false);
+  });
+
+  it("strips provider prefix for direct Perplexity", () => {
+    expect(resolvePerplexityRequestModel("https://api.perplexity.ai", "perplexity/sonar-pro")).toBe(
+      "sonar-pro",
+    );
+  });
+
+  it("keeps prefixed model for OpenRouter", () => {
+    expect(
+      resolvePerplexityRequestModel("https://openrouter.ai/api/v1", "perplexity/sonar-pro"),
+    ).toBe("perplexity/sonar-pro");
+  });
+
+  it("keeps model unchanged when URL is invalid", () => {
+    expect(resolvePerplexityRequestModel("not-a-url", "perplexity/sonar-pro")).toBe(
+      "perplexity/sonar-pro",
     );
   });
 });
@@ -112,5 +141,70 @@ describe("web_search grok config resolution", () => {
   it("respects inlineCitations config", () => {
     expect(resolveGrokInlineCitations({ inlineCitations: true })).toBe(true);
     expect(resolveGrokInlineCitations({ inlineCitations: false })).toBe(false);
+  });
+});
+
+describe("web_search grok response parsing", () => {
+  it("extracts content from Responses API message blocks", () => {
+    const result = extractGrokContent({
+      output: [
+        {
+          type: "message",
+          content: [{ type: "output_text", text: "hello from output" }],
+        },
+      ],
+    });
+    expect(result.text).toBe("hello from output");
+    expect(result.annotationCitations).toEqual([]);
+  });
+
+  it("extracts url_citation annotations from content blocks", () => {
+    const result = extractGrokContent({
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              text: "hello with citations",
+              annotations: [
+                {
+                  type: "url_citation",
+                  url: "https://example.com/a",
+                  start_index: 0,
+                  end_index: 5,
+                },
+                {
+                  type: "url_citation",
+                  url: "https://example.com/b",
+                  start_index: 6,
+                  end_index: 10,
+                },
+                {
+                  type: "url_citation",
+                  url: "https://example.com/a",
+                  start_index: 11,
+                  end_index: 15,
+                }, // duplicate
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    expect(result.text).toBe("hello with citations");
+    expect(result.annotationCitations).toEqual(["https://example.com/a", "https://example.com/b"]);
+  });
+
+  it("falls back to deprecated output_text", () => {
+    const result = extractGrokContent({ output_text: "hello from output_text" });
+    expect(result.text).toBe("hello from output_text");
+    expect(result.annotationCitations).toEqual([]);
+  });
+
+  it("returns undefined text when no content found", () => {
+    const result = extractGrokContent({});
+    expect(result.text).toBeUndefined();
+    expect(result.annotationCitations).toEqual([]);
   });
 });

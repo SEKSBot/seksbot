@@ -29,6 +29,7 @@ import {
   normalizeMainKey,
   parseAgentSessionKey,
 } from "../routing/session-key.js";
+import { isCronRunSessionKey } from "../sessions/session-key-utils.js";
 import { normalizeSessionDeliveryFields } from "../utils/delivery-context.js";
 import {
   readFirstUserMessageFromTranscript,
@@ -207,12 +208,6 @@ export function classifySessionKey(key: string, entry?: SessionEntry): GatewaySe
   return "direct";
 }
 
-function isCronRunSessionKey(key: string): boolean {
-  const parsed = parseAgentSessionKey(key);
-  const raw = parsed?.rest ?? key;
-  return /^cron:[^:]+:run:[^:]+$/.test(raw);
-}
-
 export function parseGroupKey(
   key: string,
 ): { channel?: string; kind?: "group" | "channel"; id?: string } | null {
@@ -351,10 +346,7 @@ function resolveDefaultStoreAgentId(cfg: seksbotConfig): string {
   return normalizeAgentId(resolveDefaultAgentId(cfg));
 }
 
-export function resolveSessionStoreKey(params: {
-  cfg: seksbotConfig;
-  sessionKey: string;
-}): string {
+export function resolveSessionStoreKey(params: { cfg: seksbotConfig; sessionKey: string }): string {
   const raw = params.sessionKey.trim();
   if (!raw) {
     return raw;

@@ -378,8 +378,7 @@ export async function runConfigureWizard(
         const wsUrl =
           nextConfig.gateway?.mode === "remote" && remoteUrl ? remoteUrl : localLinks.wsUrl;
         const token = nextConfig.gateway?.auth?.token ?? process.env.SEKSBOT_GATEWAY_TOKEN;
-        const password =
-          nextConfig.gateway?.auth?.password ?? process.env.SEKSBOT_GATEWAY_PASSWORD;
+        const password = nextConfig.gateway?.auth?.password ?? process.env.SEKSBOT_GATEWAY_PASSWORD;
         await waitForGatewayReachable({
           url: wsUrl,
           token,
@@ -587,7 +586,7 @@ export async function runConfigureWizard(
     outro("Configure complete.");
   } catch (err) {
     if (err instanceof WizardCancelledError) {
-      runtime.exit(0);
+      runtime.exit(1);
       return;
     }
     throw err;
