@@ -15,6 +15,7 @@ class User < ApplicationRecord
     foreign_key: "recipient_user_id",
     inverse_of: :recipient,
     dependent: :restrict_with_exception
+  has_many :injection_flags, foreign_key: :user_id, inverse_of: :flagger, dependent: :restrict_with_exception
   has_many :tag_filters, dependent: :destroy
   has_many :tag_filter_tags,
     class_name: "Tag",

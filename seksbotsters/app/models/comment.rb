@@ -14,6 +14,7 @@ class Comment < ApplicationRecord
     optional: true,
     counter_cache: :reply_count,
     touch: true
+  has_many :injection_flags, as: :flaggable, dependent: :destroy
   has_one :moderation,
     class_name: "Moderation",
     inverse_of: :comment,

@@ -15,6 +15,7 @@ class Story < ApplicationRecord
     foreign_key: "merged_story_id",
     inverse_of: :merged_into_story,
     dependent: :nullify
+  has_many :injection_flags, as: :flaggable, dependent: :destroy
   has_many :taggings,
     autosave: true,
     dependent: :destroy
