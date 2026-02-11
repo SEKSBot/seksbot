@@ -243,14 +243,54 @@ seks:
 
 `seksh` handles the local key material (hardware keychain, TPM, etc.). The agent calls it once at startup to get its broker token, then uses that for everything.
 
-### 3.4 Broker API Surface (Minimum Viable)
+### 3.4 Broker Data Model
+
+Secrets in the broker are **not** opaque key bags. They follow a structured model:
+
+#### Scoping
+- **Account-global secrets** — shared across all agents in the account (e.g., the Anthropic API key, the Discord bot token). Can be mapped to any agent via grants.
+- **Agent-scoped secrets** — belong to a specific agent only (e.g., an agent-specific OAuth refresh token, a per-agent webhook secret).
+
+#### Per-API Secrets (Structured)
+- Secrets are organized **per-API** with standardized naming. The user doesn't choose key names — the broker defines the schema for each API (e.g., `anthropic` requires `api_key`; `discord` requires `bot_token`; `openai` requires `api_key` + optional `org_id`).
+- **Agents are not granted secrets directly.** Instead, agents are granted **capabilities** — permission to use specific API calls or functions. The broker resolves which secrets are needed to fulfill a capability grant.
+
+Example:
+```
+# Account-global API secret
+anthropic:
+  api_key: "sk-ant-..."       # standardized field name
+
+# Agent capability grant (not a secret grant)
+agent "footgun":
+  capabilities:
+    - anthropic/messages.create    # can call the messages API
+    - anthropic/models.list        # can list models
+    - discord/messages.send        # can send Discord messages
+    # NOT: "here's the anthropic key" — the broker injects it
+```
+
+#### Free-Form Secrets
+- Key-value pairs with a defined prefix (e.g., `custom/` or `freeform/`).
+- Can be account-global or agent-scoped.
+- For non-standardized integrations, user scripts, etc.
+- Retrieved via `seksh get custom/my-webhook-secret` or broker API.
 
 ```
-POST /v1/proxy/{provider}/*     — Proxy any provider API call
-GET  /v1/tokens/channels        — Get channel tokens for this agent
-GET  /v1/tokens/env             — Get env vars (for non-proxied services)
+# Free-form examples
+custom/my-webhook-secret: "abc123"           # account-global
+agent "footgun":
+  custom/deploy-token: "ghp_..."             # agent-scoped
+```
+
+### 3.5 Broker API Surface (Minimum Viable)
+
+```
+POST /v1/proxy/{provider}/*     — Proxy API call (broker injects credentials based on capability grants)
+GET  /v1/tokens/channels        — Get channel tokens for this agent (based on granted capabilities)
+GET  /v1/secrets/custom/{key}   — Get free-form secret (scoped to agent + account-global)
 POST /v1/auth/verify             — Verify agent token is valid
-GET  /v1/agent/config            — Get agent-scoped config from broker
+GET  /v1/agent/capabilities      — List this agent's granted capabilities
 ```
 
 ### 3.5 Migration Path
@@ -305,12 +345,12 @@ The spike branch (`spike/skills-deprecation-seks-broker-auth`) will:
 
 ## 5. Open Questions
 
-1. **Broker hosting** — Where does the SEKS broker run? Same machine? Cloud? Peter's infra?
-2. **Broker implementation** — Separate repo? What language/framework?
-3. **Channel WebSocket connections** — Discord/Slack maintain persistent WebSocket connections. Can we proxy those through the broker, or does the agent need the raw token for WS?
-4. **Rate limiting** — Does the broker enforce per-agent rate limits?
-5. **Offline fallback** — If broker is unreachable, should agent fall back to local keys (if any)?
-6. **Skill format** — What does a seksbot-native skill look like? Same SKILL.md convention or something new?
+1. **Broker hosting** — ✅ RESOLVED: Deployed in cloud at `https://seks-broker.stcredzero.workers.dev` (Cloudflare Workers). This is the "eat your own cooking" deployment.
+2. **Broker implementation** — Separate repo? What language/framework? *(Awaiting Síofra's input)*
+3. **Channel WebSocket connections** — Discord/Slack maintain persistent WebSocket connections. Can we proxy those through the broker, or does the agent need the raw token for WS? *(Awaiting Síofra's input)*
+4. **Rate limiting** — Does the broker enforce per-agent rate limits? *(Awaiting Síofra's input)*
+5. **Skill format / execution model** — ✅ RESOLVED: seksbot-native skills run as **sub-agents inside security-focused containers**. All software tools used by the sub-agent are required to use `seksh` or the SEKS broker proxy. No direct API key access inside the container. This makes skills sandboxed by default — the container is the security boundary, and the broker is the only way out.
+6. ~~**Offline fallback**~~ — Not applicable for cloud-hosted broker. Agent requires broker connectivity.
 
 ---
 
@@ -323,3 +363,41 @@ The spike branch (`spike/skills-deprecation-seks-broker-auth`) will:
 3. **Broker server** — Separate repo, separate design doc, separate timeline.
 
 The spike branch proves the skills can be ripped out cleanly and that the auth path can be redirected to a broker without breaking the existing flow.
+
+---
+
+## 7. seksbot-Native Skill Execution Model
+
+OpenClaw skills run in the agent's own process — same permissions, same keys, same machine. That's the opposite of what we want.
+
+### Target: Containerized Sub-Agent Skills
+
+```
+┌────────────────────────────────────┐
+│  seksbot agent (host)               │
+│                                     │
+│  Receives task → spawns sub-agent   │
+│  in security-focused container      │
+└──────────────┬──────────────────────┘
+               │ spawn
+               ▼
+┌────────────────────────────────────┐
+│  Container (skill sandbox)          │
+│                                     │
+│  Sub-agent runs skill logic         │
+│  ALL external calls go through:     │
+│    - seksh (local key material)     │
+│    - SEKS broker proxy (API calls)  │
+│                                     │
+│  No raw API keys in container       │
+│  No direct network to providers     │
+│  Scoped broker token per-skill-run  │
+└─────────────────────────────────────┘
+```
+
+### Properties
+- **Isolation:** Each skill run is containerized — can't read host filesystem, other agents' state, or raw credentials
+- **Least privilege:** Scoped broker token grants only the providers/permissions that skill needs
+- **Auditable:** All API calls flow through broker → logged per-agent, per-skill
+- **Ephemeral:** Container is destroyed after skill completes — no persistent state leakage
+- **Composable:** Skills are just sub-agent tasks with a container spec + broker scope definition
