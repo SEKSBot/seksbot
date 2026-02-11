@@ -31,7 +31,7 @@ export class BrokerClient {
    * Resolve broker token from config.token or by running config.tokenCommand
    * Caches in memory, never writes to disk
    */
-  private async resolveToken(): Promise<string> {
+  async resolveToken(): Promise<string> {
     if (this.cachedToken) {
       return this.cachedToken;
     }

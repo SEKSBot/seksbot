@@ -1,7 +1,8 @@
 import type { seksbotConfig } from "../config/config.js";
 import { DEFAULT_ACCOUNT_ID, normalizeAccountId } from "../routing/session-key.js";
+import { BrokerClient } from "../seks/broker-client.js";
 
-export type DiscordTokenSource = "env" | "config" | "none";
+export type DiscordTokenSource = "env" | "config" | "broker" | "none";
 
 export type DiscordTokenResolution = {
   token: string;
@@ -17,6 +18,39 @@ export function normalizeDiscordToken(raw?: string | null): string | undefined {
     return undefined;
   }
   return trimmed.replace(/^Bot\s+/i, "");
+}
+
+/**
+ * Async version of resolveDiscordToken that supports broker-based token resolution
+ */
+export async function resolveDiscordTokenAsync(
+  cfg?: seksbotConfig,
+  opts: { accountId?: string | null; envToken?: string | null } = {},
+): Promise<DiscordTokenResolution> {
+  // First check for broker configuration
+  const brokerConfig = cfg?.seks?.broker;
+  if (brokerConfig?.url) {
+    try {
+      const brokerClient = new BrokerClient(
+        brokerConfig.url,
+        brokerConfig.token,
+        brokerConfig.tokenCommand,
+      );
+      const channelTokens = await brokerClient.getChannelTokens();
+      if (channelTokens.discord) {
+        const normalizedToken = normalizeDiscordToken(channelTokens.discord);
+        if (normalizedToken) {
+          return { token: normalizedToken, source: "broker" };
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch Discord token from SEKS broker: ${error}`);
+      // Fall through to regular resolution
+    }
+  }
+
+  // Fall back to regular token resolution
+  return resolveDiscordToken(cfg, opts);
 }
 
 export function resolveDiscordToken(
