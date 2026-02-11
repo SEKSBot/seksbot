@@ -1,0 +1,40 @@
+trilogy: &trilogy
+  adapter: trilogy
+  encoding: utf8mb4
+  host: <%= ENV.fetch('DATABASE_HOST') { "127.0.0.1" } %>
+  port: 3306
+  pool: 5
+  username: <%= ENV.fetch('DATABASE_USER') { "root" } %>
+  password: <%= ENV.fetch('DATABASE_PASSWORD') { "" } %>
+
+sqlite3: &sqlite3
+  adapter: sqlite3
+  timeout: 1000
+
+production:
+  primary:
+    <<: *trilogy
+    database: <%= ENV.fetch('DATABASE_NAME') { "lobsters" } %>
+  cache:
+    <<: *sqlite3
+    database: storage/cache.sqlite3
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *sqlite3
+    database: storage/queue.sqlite3
+    migrations_paths: db/queue_migrate
+
+development:
+  primary:
+    <<: *trilogy
+    database: lobsters_development
+    username: root
+    password: localdev
+  cache:
+    <<: *sqlite3
+    database: db/development/cache.sqlite3
+    migrations_paths: db/development/cache_migrate
+  queue:
+    <<: *sqlite3
+    database: db/development/queue.sqlite3
+    migrations_paths: db/development/queue_migrate
