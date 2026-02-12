@@ -97,6 +97,9 @@ apply_sed 's/open-claw/seksbot/g' "open-claw → seksbot (kebab)"
 apply_sed 's/clawdbot/seksbot/g' "clawdbot → seksbot"
 apply_sed 's/Clawdbot/Seksbot/g' "Clawdbot → Seksbot"
 
+# Zero-width character variants (tests embed ZWC in brand names)
+apply_sed 's/open\\u200bclaw/seks\\u200bbot/g' "openclaw with ZWC in tests"
+
 # ─── Skills deprecation ─────────────────────────────────────────
 # Remove all bundled OpenClaw skills (restored by upstream sync).
 # Our skills framework uses skill.yaml manifests + containerized execution.
