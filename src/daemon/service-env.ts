@@ -24,9 +24,23 @@ type BuildServicePathOptions = MinimalServicePathOptions & {
   env?: Record<string, string | undefined>;
 };
 
-function resolveSystemPathDirs(platform: NodeJS.Platform): string[] {
+function resolveDarwinUserBrewDir(home: string | undefined): string | undefined {
+  if (!home) {
+    return undefined;
+  }
+  // Support user-local Homebrew at ~/.brew (used when /opt/homebrew is shared/unwritable)
+  return `${home}/.brew/bin`;
+}
+
+function resolveSystemPathDirs(platform: NodeJS.Platform, home?: string): string[] {
   if (platform === "darwin") {
-    return ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"];
+    const dirs: string[] = [];
+    const userBrew = resolveDarwinUserBrewDir(home);
+    if (userBrew) {
+      dirs.push(userBrew);
+    }
+    dirs.push("/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin");
+    return dirs;
   }
   if (platform === "linux") {
     return ["/usr/local/bin", "/usr/bin", "/bin"];
@@ -93,7 +107,7 @@ export function getMinimalServicePathParts(options: MinimalServicePathOptions = 
 
   const parts: string[] = [];
   const extraDirs = options.extraDirs ?? [];
-  const systemDirs = resolveSystemPathDirs(platform);
+  const systemDirs = resolveSystemPathDirs(platform, options.home);
 
   // Add Linux user bin directories (npm global, nvm, fnm, volta, etc.)
   const linuxUserDirs =
