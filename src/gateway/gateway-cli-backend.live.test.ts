@@ -243,9 +243,7 @@ describeLive("gateway live (cli backend)", () => {
 
     const cliCommand = process.env.SEKSBOT_LIVE_CLI_BACKEND_COMMAND ?? providerDefaults?.command;
     if (!cliCommand) {
-      throw new Error(
-        `SEKSBOT_LIVE_CLI_BACKEND_COMMAND is required for provider "${providerId}".`,
-      );
+      throw new Error(`SEKSBOT_LIVE_CLI_BACKEND_COMMAND is required for provider "${providerId}".`);
     }
     const baseCliArgs =
       parseJsonStringArray(

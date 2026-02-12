@@ -4,9 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import "./test-helpers/fast-coding-tools.js";
-import { createseksbotTools } from "./seksbot-tools.js";
 import { __testing, createseksbotCodingTools } from "./pi-tools.js";
 import { createSandboxedReadTool } from "./pi-tools.read.js";
+import { createseksbotTools } from "./seksbot-tools.js";
 import { createBrowserTool } from "./tools/browser-tool.js";
 
 const defaultTools = createseksbotCodingTools();

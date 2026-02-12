@@ -10,9 +10,7 @@ describe("resolveEffectiveHomeDir", () => {
       USERPROFILE: "C:/Users/other",
     } as NodeJS.ProcessEnv;
 
-    expect(resolveEffectiveHomeDir(env, () => "/fallback")).toBe(
-      path.resolve("/srv/seksbot-home"),
-    );
+    expect(resolveEffectiveHomeDir(env, () => "/fallback")).toBe(path.resolve("/srv/seksbot-home"));
   });
 
   it("falls back to HOME then USERPROFILE then homedir", () => {

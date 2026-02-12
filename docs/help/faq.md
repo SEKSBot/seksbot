@@ -1256,9 +1256,9 @@ Related: [Agent workspace](/concepts/agent-workspace), [Memory](/concepts/memory
 
 Everything lives under `$SEKSBOT_STATE_DIR` (default: `~/.seksbot`):
 
-| Path                                                            | Purpose                                                      |
-| --------------------------------------------------------------- | ------------------------------------------------------------ |
-| `$SEKSBOT_STATE_DIR/seksbot.json`                             | Main config (JSON5)                                          |
+| Path                                                           | Purpose                                                      |
+| -------------------------------------------------------------- | ------------------------------------------------------------ |
+| `$SEKSBOT_STATE_DIR/seksbot.json`                              | Main config (JSON5)                                          |
 | `$SEKSBOT_STATE_DIR/credentials/oauth.json`                    | Legacy OAuth import (copied into auth profiles on first use) |
 | `$SEKSBOT_STATE_DIR/agents/<agentId>/agent/auth-profiles.json` | Auth profiles (OAuth + API keys)                             |
 | `$SEKSBOT_STATE_DIR/agents/<agentId>/agent/auth.json`          | Runtime auth cache (managed automatically)                   |

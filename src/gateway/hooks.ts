@@ -53,9 +53,7 @@ export function extractHookToken(req: IncomingMessage): string | undefined {
     }
   }
   const headerToken =
-    typeof req.headers["x-seksbot-token"] === "string"
-      ? req.headers["x-seksbot-token"].trim()
-      : "";
+    typeof req.headers["x-seksbot-token"] === "string" ? req.headers["x-seksbot-token"].trim() : "";
   if (headerToken) {
     return headerToken;
   }

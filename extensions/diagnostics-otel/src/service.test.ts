@@ -87,6 +87,7 @@ vi.mock("@opentelemetry/resources", () => ({
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(_value?: unknown) {}
   },
+  resourceFromAttributes: vi.fn(() => ({})),
 }));
 
 vi.mock("@opentelemetry/semantic-conventions", () => ({
@@ -192,14 +193,10 @@ describe("diagnostics-otel service", () => {
     });
 
     expect(telemetryState.counters.get("seksbot.webhook.received")?.add).toHaveBeenCalled();
-    expect(
-      telemetryState.histograms.get("seksbot.webhook.duration_ms")?.record,
-    ).toHaveBeenCalled();
+    expect(telemetryState.histograms.get("seksbot.webhook.duration_ms")?.record).toHaveBeenCalled();
     expect(telemetryState.counters.get("seksbot.message.queued")?.add).toHaveBeenCalled();
     expect(telemetryState.counters.get("seksbot.message.processed")?.add).toHaveBeenCalled();
-    expect(
-      telemetryState.histograms.get("seksbot.message.duration_ms")?.record,
-    ).toHaveBeenCalled();
+    expect(telemetryState.histograms.get("seksbot.message.duration_ms")?.record).toHaveBeenCalled();
     expect(telemetryState.histograms.get("seksbot.queue.wait_ms")?.record).toHaveBeenCalled();
     expect(telemetryState.counters.get("seksbot.session.stuck")?.add).toHaveBeenCalled();
     expect(

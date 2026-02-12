@@ -11,10 +11,10 @@ title: "Installer Internals"
 
 seksbot ships three installer scripts, served from `seksbot.ai`.
 
-| Script                             | Platform             | What it does                                                                                 |
-| ---------------------------------- | -------------------- | -------------------------------------------------------------------------------------------- |
+| Script                             | Platform             | What it does                                                                                |
+| ---------------------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
 | [`install.sh`](#installsh)         | macOS / Linux / WSL  | Installs Node if needed, installs seksbot via npm (default) or git, and can run onboarding. |
-| [`install-cli.sh`](#install-clish) | macOS / Linux / WSL  | Installs Node + seksbot into a local prefix (`~/.seksbot`). No root required.              |
+| [`install-cli.sh`](#install-clish) | macOS / Linux / WSL  | Installs Node + seksbot into a local prefix (`~/.seksbot`). No root required.               |
 | [`install.ps1`](#installps1)       | Windows (PowerShell) | Installs Node if needed, installs seksbot via npm (default) or git, and can run onboarding. |
 
 ## Quick commands
@@ -126,28 +126,28 @@ The script exits with code `2` for invalid method selection or invalid `--instal
 <AccordionGroup>
   <Accordion title="Flags reference">
 
-| Flag                            | Description                                                |
-| ------------------------------- | ---------------------------------------------------------- |
-| `--install-method npm\|git`     | Choose install method (default: `npm`). Alias: `--method`  |
-| `--npm`                         | Shortcut for npm method                                    |
-| `--git`                         | Shortcut for git method. Alias: `--github`                 |
-| `--version <version\|dist-tag>` | npm version or dist-tag (default: `latest`)                |
-| `--beta`                        | Use beta dist-tag if available, else fallback to `latest`  |
+| Flag                            | Description                                               |
+| ------------------------------- | --------------------------------------------------------- |
+| `--install-method npm\|git`     | Choose install method (default: `npm`). Alias: `--method` |
+| `--npm`                         | Shortcut for npm method                                   |
+| `--git`                         | Shortcut for git method. Alias: `--github`                |
+| `--version <version\|dist-tag>` | npm version or dist-tag (default: `latest`)               |
+| `--beta`                        | Use beta dist-tag if available, else fallback to `latest` |
 | `--git-dir <path>`              | Checkout directory (default: `~/seksbot`). Alias: `--dir` |
-| `--no-git-update`               | Skip `git pull` for existing checkout                      |
-| `--no-prompt`                   | Disable prompts                                            |
-| `--no-onboard`                  | Skip onboarding                                            |
-| `--onboard`                     | Enable onboarding                                          |
-| `--dry-run`                     | Print actions without applying changes                     |
-| `--verbose`                     | Enable debug output (`set -x`, npm notice-level logs)      |
-| `--help`                        | Show usage (`-h`)                                          |
+| `--no-git-update`               | Skip `git pull` for existing checkout                     |
+| `--no-prompt`                   | Disable prompts                                           |
+| `--no-onboard`                  | Skip onboarding                                           |
+| `--onboard`                     | Enable onboarding                                         |
+| `--dry-run`                     | Print actions without applying changes                    |
+| `--verbose`                     | Enable debug output (`set -x`, npm notice-level logs)     |
+| `--help`                        | Show usage (`-h`)                                         |
 
   </Accordion>
 
   <Accordion title="Environment variables reference">
 
-| Variable                                    | Description                                   |
-| ------------------------------------------- | --------------------------------------------- |
+| Variable                                   | Description                                   |
+| ------------------------------------------ | --------------------------------------------- |
 | `SEKSBOT_INSTALL_METHOD=git\|npm`          | Install method                                |
 | `SEKSBOT_VERSION=latest\|next\|<semver>`   | npm version or dist-tag                       |
 | `SEKSBOT_BETA=0\|1`                        | Use beta if available                         |
@@ -158,7 +158,7 @@ The script exits with code `2` for invalid method selection or invalid `--instal
 | `SEKSBOT_DRY_RUN=1`                        | Dry run mode                                  |
 | `SEKSBOT_VERBOSE=1`                        | Debug mode                                    |
 | `SEKSBOT_NPM_LOGLEVEL=error\|warn\|notice` | npm log level                                 |
-| `SHARP_IGNORE_GLOBAL_LIBVIPS=0\|1`          | Control sharp/libvips behavior (default: `1`) |
+| `SHARP_IGNORE_GLOBAL_LIBVIPS=0\|1`         | Control sharp/libvips behavior (default: `1`) |
 
   </Accordion>
 </AccordionGroup>
@@ -215,11 +215,11 @@ Designed for environments where you want everything under a local prefix (defaul
 
 | Flag                   | Description                                                                     |
 | ---------------------- | ------------------------------------------------------------------------------- |
-| `--prefix <path>`      | Install prefix (default: `~/.seksbot`)                                         |
-| `--version <ver>`      | seksbot version or dist-tag (default: `latest`)                                |
+| `--prefix <path>`      | Install prefix (default: `~/.seksbot`)                                          |
+| `--version <ver>`      | seksbot version or dist-tag (default: `latest`)                                 |
 | `--node-version <ver>` | Node version (default: `22.22.0`)                                               |
 | `--json`               | Emit NDJSON events                                                              |
-| `--onboard`            | Run `seksbot onboard` after install                                            |
+| `--onboard`            | Run `seksbot onboard` after install                                             |
 | `--no-onboard`         | Skip onboarding (default)                                                       |
 | `--set-npm-prefix`     | On Linux, force npm prefix to `~/.npm-global` if current prefix is not writable |
 | `--help`               | Show usage (`-h`)                                                               |
@@ -228,15 +228,15 @@ Designed for environments where you want everything under a local prefix (defaul
 
   <Accordion title="Environment variables reference">
 
-| Variable                                    | Description                                                                       |
-| ------------------------------------------- | --------------------------------------------------------------------------------- |
+| Variable                                   | Description                                                                       |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
 | `SEKSBOT_PREFIX=<path>`                    | Install prefix                                                                    |
-| `SEKSBOT_VERSION=<ver>`                    | seksbot version or dist-tag                                                      |
+| `SEKSBOT_VERSION=<ver>`                    | seksbot version or dist-tag                                                       |
 | `SEKSBOT_NODE_VERSION=<ver>`               | Node version                                                                      |
 | `SEKSBOT_NO_ONBOARD=1`                     | Skip onboarding                                                                   |
 | `SEKSBOT_NPM_LOGLEVEL=error\|warn\|notice` | npm log level                                                                     |
 | `SEKSBOT_GIT_DIR=<path>`                   | Legacy cleanup lookup path (used when removing old `Peekaboo` submodule checkout) |
-| `SHARP_IGNORE_GLOBAL_LIBVIPS=0\|1`          | Control sharp/libvips behavior (default: `1`)                                     |
+| `SHARP_IGNORE_GLOBAL_LIBVIPS=0\|1`         | Control sharp/libvips behavior (default: `1`)                                     |
 
   </Accordion>
 </AccordionGroup>
@@ -291,21 +291,21 @@ Designed for environments where you want everything under a local prefix (defaul
 <AccordionGroup>
   <Accordion title="Flags reference">
 
-| Flag                      | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `-InstallMethod npm\|git` | Install method (default: `npm`)                        |
-| `-Tag <tag>`              | npm dist-tag (default: `latest`)                       |
+| Flag                      | Description                                           |
+| ------------------------- | ----------------------------------------------------- |
+| `-InstallMethod npm\|git` | Install method (default: `npm`)                       |
+| `-Tag <tag>`              | npm dist-tag (default: `latest`)                      |
 | `-GitDir <path>`          | Checkout directory (default: `%USERPROFILE%\seksbot`) |
-| `-NoOnboard`              | Skip onboarding                                        |
-| `-NoGitUpdate`            | Skip `git pull`                                        |
-| `-DryRun`                 | Print actions only                                     |
+| `-NoOnboard`              | Skip onboarding                                       |
+| `-NoGitUpdate`            | Skip `git pull`                                       |
+| `-DryRun`                 | Print actions only                                    |
 
   </Accordion>
 
   <Accordion title="Environment variables reference">
 
-| Variable                           | Description        |
-| ---------------------------------- | ------------------ |
+| Variable                          | Description        |
+| --------------------------------- | ------------------ |
 | `SEKSBOT_INSTALL_METHOD=git\|npm` | Install method     |
 | `SEKSBOT_GIT_DIR=<path>`          | Checkout directory |
 | `SEKSBOT_NO_ONBOARD=1`            | Skip onboarding    |

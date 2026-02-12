@@ -96,9 +96,7 @@ describe("applyCliProfileEnv", () => {
 
     const resolvedHome = path.resolve("/srv/seksbot-home");
     expect(env.SEKSBOT_STATE_DIR).toBe(path.join(resolvedHome, ".seksbot-work"));
-    expect(env.SEKSBOT_CONFIG_PATH).toBe(
-      path.join(resolvedHome, ".seksbot-work", "seksbot.json"),
-    );
+    expect(env.SEKSBOT_CONFIG_PATH).toBe(path.join(resolvedHome, ".seksbot-work", "seksbot.json"));
   });
 });
 
@@ -150,9 +148,7 @@ describe("formatCliCommand", () => {
   });
 
   it("handles command with no args after seksbot", () => {
-    expect(formatCliCommand("seksbot", { SEKSBOT_PROFILE: "test" })).toBe(
-      "seksbot --profile test",
-    );
+    expect(formatCliCommand("seksbot", { SEKSBOT_PROFILE: "test" })).toBe("seksbot --profile test");
   });
 
   it("handles pnpm wrapper", () => {

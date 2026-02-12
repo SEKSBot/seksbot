@@ -78,9 +78,7 @@ export async function resolveProxyTarget(
  * Fetch channel tokens (Discord, Telegram, etc.) from the broker.
  * Tokens are held in-memory only, never written to disk.
  */
-export async function fetchChannelTokens(
-  config: SeksBrokerConfig,
-): Promise<ChannelTokens> {
+export async function fetchChannelTokens(config: SeksBrokerConfig): Promise<ChannelTokens> {
   const token = await resolveBrokerToken(config);
   const url = `${config.url.replace(/\/+$/, "")}/v1/tokens/channels`;
   const res = await fetch(url, {
@@ -95,9 +93,7 @@ export async function fetchChannelTokens(
 /**
  * Verify the agent's broker token is valid.
  */
-export async function verifyBrokerToken(
-  config: SeksBrokerConfig,
-): Promise<boolean> {
+export async function verifyBrokerToken(config: SeksBrokerConfig): Promise<boolean> {
   try {
     const token = await resolveBrokerToken(config);
     const url = `${config.url.replace(/\/+$/, "")}/v1/auth/verify`;

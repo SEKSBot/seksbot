@@ -76,10 +76,10 @@ See [Configuration: Env var substitution](/gateway/configuration#env-var-substit
 
 ## Path-related env vars
 
-| Variable               | Purpose                                                                                                                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Variable              | Purpose                                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `SEKSBOT_HOME`        | Override the home directory used for all internal path resolution (`~/.seksbot/`, agent dirs, sessions, credentials). Useful when running seksbot as a dedicated service user. |
-| `SEKSBOT_STATE_DIR`   | Override the state directory (default `~/.seksbot`).                                                                                                                            |
+| `SEKSBOT_STATE_DIR`   | Override the state directory (default `~/.seksbot`).                                                                                                                           |
 | `SEKSBOT_CONFIG_PATH` | Override the config file path (default `~/.seksbot/seksbot.json`).                                                                                                             |
 
 ### `SEKSBOT_HOME`

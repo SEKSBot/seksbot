@@ -17,9 +17,7 @@ export type SkillInstallResult = {
   warnings?: string[];
 };
 
-export async function installSkill(
-  _params: SkillInstallRequest,
-): Promise<SkillInstallResult> {
+export async function installSkill(_params: SkillInstallRequest): Promise<SkillInstallResult> {
   return {
     ok: false,
     message: "skills-install deprecated",

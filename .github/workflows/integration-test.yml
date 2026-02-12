@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Docker image tag to test (default: latest)'
+        description: "Docker image tag to test (default: latest)"
         required: false
-        default: 'latest'
+        default: "latest"
   # Uncomment to run on pushes to main:
   # push:
   #   branches: [main]
