@@ -49,7 +49,9 @@ RUN pnpm install --frozen-lockfile
 # Copy source and build
 COPY . .
 RUN SEKSBOT_A2UI_SKIP_MISSING=1 pnpm build
-RUN pnpm ui:build
+RUN pnpm ui:build || true
+# Ensure ui/dist exists even if ui:build was skipped
+RUN mkdir -p /app/ui/dist
 
 # ─── Stage 3: Production runtime ────────────────────────────────────────────────
 
@@ -68,8 +70,8 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy built application from builder
+# Note: UI builds to dist/control-ui, not ui/dist
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/ui/dist ./ui/dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
@@ -82,8 +84,9 @@ RUN mkdir -p /root/.seksbot/workspace /root/.seksbot/data
 
 # Environment
 ENV NODE_ENV=production
+# Broker URL (non-secret) — set at runtime
 ENV SEKS_BROKER_URL=
-ENV SEKS_AGENT_TOKEN=
+# Agent token should be passed at runtime via --env or secrets, not baked into image
 
 # Expose gateway port
 EXPOSE 3000

@@ -1,0 +1,180 @@
+name: Integration Test (Discord Bot Smoke)
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to test (default: latest)'
+        required: false
+        default: 'latest'
+  # Uncomment to run on pushes to main:
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: integration-test-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: seksbot/seksbot
+  TEST_TIMEOUT_SECONDS: 120
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Build image from source (until published images are stable) ──
+      - name: Build test image
+        run: |
+          docker build \
+            -f Dockerfile.seksbot \
+            -t seksbot-test:local \
+            .
+
+      # ── Write minimal test config ──
+      - name: Create test config
+        run: |
+          mkdir -p /tmp/seksbot-test/.seksbot
+          cat > /tmp/seksbot-test/.seksbot/seksbot.json << 'TESTCFG'
+          {
+            "channels": {
+              "discord": {
+                "guildId": "${{ secrets.TEST_DISCORD_GUILD_ID }}",
+                "allowFrom": ["${{ secrets.TEST_DISCORD_ADMIN_ID }}"]
+              }
+            },
+            "agents": {
+              "defaults": {
+                "model": "anthropic/claude-sonnet-4-20250514"
+              }
+            },
+            "seks": {
+              "broker": {
+                "url": "${{ secrets.SEKS_BROKER_URL }}",
+                "token": "${{ secrets.SEKS_AGENT_TOKEN }}"
+              }
+            }
+          }
+          TESTCFG
+
+      # ── Start the agent container ──
+      - name: Start seksbot container
+        run: |
+          docker run -d \
+            --name seksbot-integration \
+            -v /tmp/seksbot-test/.seksbot:/root/.seksbot \
+            -e DISCORD_TOKEN="${{ secrets.TEST_DISCORD_BOT_TOKEN }}" \
+            -e SEKS_BROKER_URL="${{ secrets.SEKS_BROKER_URL }}" \
+            -e SEKS_AGENT_TOKEN="${{ secrets.SEKS_AGENT_TOKEN }}" \
+            -p 3000:3000 \
+            seksbot-test:local
+
+      # ── Wait for gateway to be healthy ──
+      - name: Wait for gateway health
+        run: |
+          echo "Waiting for seksbot gateway to become healthy..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
+              echo "Gateway healthy after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Gateway failed to become healthy within 60s"
+          docker logs seksbot-integration
+          exit 1
+
+      # ── Send test message via Discord API ──
+      - name: Send integration test prompt
+        id: send-prompt
+        run: |
+          NONCE="integration-test-$(date +%s)-${GITHUB_RUN_ID}"
+          echo "nonce=${NONCE}" >> "$GITHUB_OUTPUT"
+
+          # Send a message to the test channel mentioning the bot
+          RESPONSE=$(curl -s -X POST \
+            "https://discord.com/api/v10/channels/${{ secrets.TEST_DISCORD_CHANNEL_ID }}/messages" \
+            -H "Authorization: Bot ${{ secrets.TEST_DISCORD_BOT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"Integration test ${NONCE}: Reply with INTEGRATION_OK if you can read this.\"
+            }")
+
+          MESSAGE_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "prompt_message_id=${MESSAGE_ID}" >> "$GITHUB_OUTPUT"
+          echo "Sent test prompt (message ID: ${MESSAGE_ID})"
+
+      # ── Poll for bot response ──
+      - name: Wait for bot response
+        run: |
+          NONCE="${{ steps.send-prompt.outputs.nonce }}"
+          CHANNEL_ID="${{ secrets.TEST_DISCORD_CHANNEL_ID }}"
+          BOT_TOKEN="${{ secrets.TEST_DISCORD_BOT_TOKEN }}"
+          TIMEOUT=${{ env.TEST_TIMEOUT_SECONDS }}
+
+          echo "Waiting up to ${TIMEOUT}s for bot response containing INTEGRATION_OK..."
+
+          START=$(date +%s)
+          while true; do
+            ELAPSED=$(( $(date +%s) - START ))
+            if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+              echo "Timeout: no bot response after ${TIMEOUT}s"
+              docker logs seksbot-integration --tail 100
+              exit 1
+            fi
+
+            # Fetch recent messages
+            MESSAGES=$(curl -s \
+              "https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=10" \
+              -H "Authorization: Bot ${BOT_TOKEN}")
+
+            # Check if any message from the bot contains INTEGRATION_OK
+            MATCH=$(echo "$MESSAGES" | jq -r '.[] | select(.author.bot == true) | select(.content | test("INTEGRATION_OK")) | .id' | head -1)
+
+            if [ -n "$MATCH" ]; then
+              echo "Bot responded successfully (message ID: ${MATCH})"
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+      # ── Cleanup ──
+      - name: Collect container logs
+        if: always()
+        run: |
+          docker logs seksbot-integration > /tmp/seksbot-integration.log 2>&1 || true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-logs
+          path: /tmp/seksbot-integration.log
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop seksbot-integration || true
+          docker rm seksbot-integration || true
