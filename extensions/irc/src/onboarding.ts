@@ -379,7 +379,7 @@ export const ircOnboardingAdapter: ChannelOnboardingAdapter = {
       const username = String(
         await prompter.text({
           message: "IRC username",
-          initialValue: resolved.config.username || nick || "openclaw",
+          initialValue: resolved.config.username || nick || "seksbot",
           validate: (value) => (String(value ?? "").trim() ? undefined : "Required"),
         }),
       ).trim();

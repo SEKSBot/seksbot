@@ -22,7 +22,7 @@ describe("irc onboarding", () => {
           return "openclaw-bot";
         }
         if (message === "IRC username") {
-          return "openclaw";
+          return "seksbot";
         }
         if (message === "IRC real name") {
           return "seksbot Bot";
