@@ -1,0 +1,11 @@
+# Permanent branding transforms — these should always match
+id: branding-import-openclaw
+message: "Rename openclaw import to seksbot"
+severity: warning
+language: TypeScript
+rule:
+  pattern: import { $$$IMPORTS } from "openclaw"
+fix: import { $$$IMPORTS } from "seksbot"
+metadata:
+  category: permanent
+  note: "Core branding rename — should always match on upstream code"
