@@ -97,5 +97,19 @@ apply_sed 's/open-claw/seksbot/g' "open-claw → seksbot (kebab)"
 apply_sed 's/clawdbot/seksbot/g' "clawdbot → seksbot"
 apply_sed 's/Clawdbot/Seksbot/g' "Clawdbot → Seksbot"
 
+# ─── Auto-format (oxfmt) ────────────────────────────────────────
+
+echo ""
+echo "=== Auto-format (oxfmt) ==="
+
+if $DRY_RUN; then
+  format_count=$(npx oxfmt --check 2>&1 | grep -c "Format issues" || echo "0")
+  echo "  $format_count files need formatting"
+else
+  echo "  Formatting all files..."
+  npx oxfmt --write . 2>/dev/null || true
+  echo "  ✅ Formatted"
+fi
+
 echo ""
 echo "Done."
