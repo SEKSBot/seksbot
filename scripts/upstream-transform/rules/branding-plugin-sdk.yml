@@ -1,0 +1,10 @@
+id: branding-plugin-sdk-import
+message: "Rename openclaw/plugin-sdk to seksbot/plugin-sdk"
+severity: warning
+language: TypeScript
+rule:
+  pattern: from "openclaw/plugin-sdk"
+fix: from "seksbot/plugin-sdk"
+metadata:
+  category: permanent
+  note: "Plugin SDK package rename"
