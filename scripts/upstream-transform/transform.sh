@@ -97,6 +97,46 @@ apply_sed 's/open-claw/seksbot/g' "open-claw → seksbot (kebab)"
 apply_sed 's/clawdbot/seksbot/g' "clawdbot → seksbot"
 apply_sed 's/Clawdbot/Seksbot/g' "Clawdbot → Seksbot"
 
+# ─── Structural patches (block removals, etc.) ─────────────────
+
+echo ""
+echo "=== Structural patches ==="
+
+# Remove a top-level job block from a GitHub Actions workflow YAML
+remove_yaml_job() {
+  local file="$1"
+  local job_name="$2"
+  local description="$3"
+
+  if [ ! -f "$file" ]; then
+    echo "  ⚠️  $description: file not found ($file)"
+    return
+  fi
+
+  if ! grep -q "^  ${job_name}:" "$file" 2>/dev/null; then
+    echo "  ⚠️  STALE: $description — job '$job_name' not found (upstream may have removed it)"
+    return
+  fi
+
+  if $DRY_RUN; then
+    echo "  $description: would remove job '$job_name'"
+  else
+    python3 -c "
+import re
+with open('$file') as f:
+    content = f.read()
+# Remove from '  $job_name:' up to (but not including) the next top-level job
+result = re.sub(r'\n  ${job_name}:.*?(?=\n  [a-z])', '', content, count=1, flags=re.DOTALL)
+with open('$file', 'w') as f:
+    f.write(result)
+"
+    echo "  ✅ $description"
+  fi
+}
+
+# seksbot is cloud/Mac centric — no Windows CI
+remove_yaml_job ".github/workflows/ci.yml" "checks-windows" "Remove Windows CI checks"
+
 # ─── Auto-format (oxfmt) ────────────────────────────────────────
 
 echo ""
