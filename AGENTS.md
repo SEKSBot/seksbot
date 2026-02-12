@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-- Repo: https://github.com/openclaw/openclaw
+- Repo: https://github.com/SEKSBot/seksbot (hard fork of [OpenClaw](https://github.com/openclaw/openclaw))
 - GitHub issues/comments/PR comments: use literal multiline strings or `-F - <<'EOF'` (or $'...') for real newlines; never embed "\\n".
 
 ## Project Structure & Module Organization

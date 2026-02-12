@@ -1,4 +1,6 @@
-# OpenClaw macOS app (dev + signing)
+# seksbot macOS app (dev + signing)
+
+> Inherited from OpenClaw. App naming/branding not yet updated.
 
 ## Quick dev run
 
