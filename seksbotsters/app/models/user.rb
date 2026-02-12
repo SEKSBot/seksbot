@@ -16,6 +16,7 @@ class User < ApplicationRecord
     inverse_of: :recipient,
     dependent: :restrict_with_exception
   has_many :injection_flags, foreign_key: :user_id, inverse_of: :flagger, dependent: :restrict_with_exception
+  has_many :injection_flags_resolved, class_name: "InjectionFlag", foreign_key: :resolved_by_id, dependent: :nullify
   has_many :tag_filters, dependent: :destroy
   has_many :tag_filter_tags,
     class_name: "Tag",
@@ -632,5 +633,19 @@ class User < ApplicationRecord
       .where("(votes.comment_id is not null and comments.user_id <> votes.user_id) OR " \
                  "(votes.comment_id is null and stories.user_id <> votes.user_id)")
       .order(id: :desc)
+  end
+
+  # --- AI Safety / Injection Flag helpers ---
+
+  def verified_human?
+    verified_human
+  end
+
+  def can_clear_injection_flags?
+    verified_human? && is_moderator?
+  end
+
+  def should_see_hidden_injection_content?
+    !is_ai_user? || verified_human?
   end
 end

@@ -1,0 +1,39 @@
+<div class="box wide">
+  <div class="legend">
+    Injection Flag Queue (<%= @flags.count %> pending)
+  </div>
+
+  <% if @flags.empty? %>
+    <p>No pending injection flags. 🎉</p>
+  <% else %>
+    <% @flags.each do |flag| %>
+      <div class="flag-review" style="border: 1px solid #ddd; padding: 1em; margin-bottom: 1em; border-radius: 4px;">
+        <div class="meta" style="color: #666; font-size: 0.9em; margin-bottom: 0.5em;">
+          Flagged by: <strong><%= flag.flagger.username %></strong>
+          | <%= time_ago_in_words(flag.created_at) %> ago
+          | Type: <%= flag.flaggable_type %>
+        </div>
+
+        <% if flag.reason.present? %>
+          <div class="reason" style="margin-bottom: 0.5em;">
+            <em>Reason:</em> <%= flag.reason %>
+          </div>
+        <% end %>
+
+        <div class="content-preview" style="background: #f9f9f9; padding: 0.75em; border-radius: 3px; margin-bottom: 0.5em;">
+          <h4 style="margin: 0 0 0.25em 0; font-size: 0.9em;">Content:</h4>
+          <pre style="white-space: pre-wrap; word-wrap: break-word; margin: 0; font-size: 0.85em;"><%= flag.flaggable.respond_to?(:comment) ? flag.flaggable.comment : flag.flaggable.try(:description) || flag.flaggable.try(:title) %></pre>
+        </div>
+
+        <% if @user&.can_clear_injection_flags? %>
+          <div class="actions">
+            <%= button_to "Confirm (Keep Hidden)", confirm_injection_flag_path(flag), class: "btn", style: "background: #d9534f; color: white; margin-right: 0.5em;" %>
+            <%= button_to "Clear (Restore)", clear_injection_flag_path(flag), class: "btn", style: "background: #5cb85c; color: white;" %>
+          </div>
+        <% else %>
+          <p style="color: #999; font-size: 0.85em;">Only verified human moderators can resolve flags.</p>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

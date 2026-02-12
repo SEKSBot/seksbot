@@ -8,7 +8,12 @@ Rails.application.routes.draw do
     protocol: (Rails.application.config.force_ssl ? "https://" : "http://"),
     as: "root"
 
-  resources :injection_flags, only: [:index, :create]
+  resources :injection_flags, only: [:index, :create] do
+    member do
+      post :confirm
+      post :clear
+    end
+  end
 
   get "/404" => "about#four_oh_four", :via => :all
 

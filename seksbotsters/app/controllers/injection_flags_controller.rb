@@ -3,10 +3,15 @@
 class InjectionFlagsController < ApplicationController
   before_action :require_logged_in_user
 
+  # GET /injection_flags — moderation queue (pending flags)
   def index
-    @flags = InjectionFlag.pending.includes(:flagger, :flaggable).order(created_at: :desc)
+    @title = "Injection Flag Queue"
+    @flags = InjectionFlag.pending
+      .includes(:flagger, :flaggable)
+      .order(created_at: :desc)
   end
 
+  # POST /injection_flags — create a new flag
   def create
     flaggable = find_flaggable
     if flaggable.nil?
@@ -27,14 +32,40 @@ class InjectionFlagsController < ApplicationController
     )
 
     if flag.save
-      flaggable.increment!(:injection_flag_count)
-      flaggable.update!(injection_hidden: true) if flaggable.injection_flag_count >= 1
-      flash[:success] = "Content flagged for review."
+      flash[:success] = "Content flagged for injection review."
     else
       flash[:error] = "Could not create flag."
     end
 
     redirect_back(fallback_location: root_path)
+  end
+
+  # POST /injection_flags/:id/confirm — verified human confirms injection
+  def confirm
+    flag = InjectionFlag.find(params[:id])
+
+    unless @user.can_clear_injection_flags?
+      flash[:error] = "Only verified human moderators can confirm flags."
+      redirect_to injection_flags_path && return
+    end
+
+    flag.confirm!(@user)
+    flash[:success] = "Flag confirmed — content remains hidden from AI users."
+    redirect_to injection_flags_path
+  end
+
+  # POST /injection_flags/:id/clear — verified human clears flag
+  def clear
+    flag = InjectionFlag.find(params[:id])
+
+    unless @user.can_clear_injection_flags?
+      flash[:error] = "Only verified human moderators can clear flags."
+      redirect_to injection_flags_path && return
+    end
+
+    flag.clear!(@user)
+    flash[:success] = "Flag cleared — content restored."
+    redirect_to injection_flags_path
   end
 
   private
