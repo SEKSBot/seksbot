@@ -14,6 +14,7 @@ import type {
   SkillSnapshot,
 } from "./types.js";
 import { createSubsystemLogger } from "../../logging/subsystem.js";
+import { buildSkillSnapshot, scanSkillsDir } from "../../seks/skills/loader.js";
 import { CONFIG_DIR, resolveUserPath } from "../../utils.js";
 import { resolveBundledSkillsDir } from "./bundled-dir.js";
 import { shouldIncludeSkill } from "./config.js";
@@ -259,18 +260,37 @@ export function resolveSkillsPromptForRun(params: {
   config?: seksbotConfig;
   workspaceDir: string;
 }): string {
+  const parts: string[] = [];
+
+  // Legacy OpenClaw skills (if any remain)
   const snapshotPrompt = params.skillsSnapshot?.prompt?.trim();
   if (snapshotPrompt) {
-    return snapshotPrompt;
-  }
-  if (params.entries && params.entries.length > 0) {
+    parts.push(snapshotPrompt);
+  } else if (params.entries && params.entries.length > 0) {
     const prompt = buildWorkspaceSkillsPrompt(params.workspaceDir, {
       entries: params.entries,
       config: params.config,
     });
-    return prompt.trim() ? prompt : "";
+    if (prompt.trim()) {
+      parts.push(prompt);
+    }
   }
-  return "";
+
+  // seksbot-native skills (skill.yaml manifests)
+  try {
+    const skillsDir = path.join(params.workspaceDir, "skills");
+    const seksSkills = scanSkillsDir(skillsDir);
+    if (seksSkills.length > 0) {
+      const snapshot = buildSkillSnapshot(seksSkills);
+      if (snapshot.prompt.trim()) {
+        parts.push(snapshot.prompt);
+      }
+    }
+  } catch {
+    // seksbot skills loader not available — skip silently
+  }
+
+  return parts.join("\n\n");
 }
 
 export function loadWorkspaceSkillEntries(

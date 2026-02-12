@@ -20,3 +20,4 @@ export type {
 
 export { parseManifest, readSkillMd } from "./manifest.js";
 export { buildSkillSnapshot, loadSkills, scanSkillsDir } from "./loader.js";
+export { executeSkill, isDockerAvailable } from "./executor.js";
