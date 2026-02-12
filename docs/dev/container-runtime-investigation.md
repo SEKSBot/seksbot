@@ -19,6 +19,7 @@ seksbot skills run as containerized sub-agents. The container runtime must:
 ### 1. Docker (OCI Containers)
 
 **Pros:**
+
 - Already in our stack (Dockerfile.seksbot exists)
 - Fast startup (~200ms)
 - Mature tooling, well-understood
@@ -26,11 +27,13 @@ seksbot skills run as containerized sub-agents. The container runtime must:
 - Works on Linux, macOS (via VM), and in CI
 
 **Cons:**
+
 - Shared kernel — container escapes are a known attack surface
 - Docker daemon required (or Podman as drop-in)
 - Network isolation requires iptables rules or custom networks
 
 **Network enforcement:**
+
 ```bash
 # Create a network that only allows traffic to the broker
 docker network create --driver bridge \
@@ -49,17 +52,20 @@ docker run --rm \
 ### 2. gVisor (runsc)
 
 **Pros:**
+
 - Drop-in replacement for runc (Docker's default runtime)
 - User-space kernel — intercepts syscalls, much stronger isolation than containers
 - Same Docker workflow, just `--runtime=runsc`
 - Used by Google Cloud Run, GKE Sandbox
 
 **Cons:**
+
 - Linux only (no macOS)
 - Some syscall compatibility gaps (mostly edge cases)
 - Slight performance overhead on syscall-heavy workloads
 
 **Usage:**
+
 ```bash
 docker run --runtime=runsc --rm \
   --network none \
@@ -71,12 +77,14 @@ docker run --runtime=runsc --rm \
 ### 3. Firecracker (microVMs)
 
 **Pros:**
+
 - Full VM isolation — separate kernel, strongest security boundary
 - Sub-second startup (~125ms)
 - Used by AWS Lambda, Fly.io
 - Perfect for multi-tenant / untrusted code
 
 **Cons:**
+
 - Linux only, KVM required
 - More complex orchestration than Docker
 - No native macOS support
@@ -85,12 +93,14 @@ docker run --runtime=runsc --rm \
 ### 4. Wasm (WasmEdge / Wasmtime)
 
 **Pros:**
+
 - Near-instant startup (<10ms)
 - Extremely lightweight
 - Capability-based security by design
 - Cross-platform
 
 **Cons:**
+
 - Limited ecosystem — most tools/SDKs aren't Wasm-ready
 - Node.js in Wasm is experimental
 - Can't run arbitrary Docker images
@@ -100,11 +110,11 @@ docker run --runtime=runsc --rm \
 
 **Start with Docker, plan for gVisor.**
 
-| Phase | Runtime | Why |
-|-------|---------|-----|
-| **Now** | Docker with `--network` restrictions | Works everywhere, fast iteration, already in our stack |
-| **Soon** | Docker + gVisor (`--runtime=runsc`) on Linux hosts | Stronger isolation, drop-in upgrade |
-| **Later** | Firecracker for cloud deployments | When we need multi-tenant skill execution at scale |
+| Phase     | Runtime                                            | Why                                                    |
+| --------- | -------------------------------------------------- | ------------------------------------------------------ |
+| **Now**   | Docker with `--network` restrictions               | Works everywhere, fast iteration, already in our stack |
+| **Soon**  | Docker + gVisor (`--runtime=runsc`) on Linux hosts | Stronger isolation, drop-in upgrade                    |
+| **Later** | Firecracker for cloud deployments                  | When we need multi-tenant skill execution at scale     |
 
 ### Network Enforcement Strategy
 
@@ -128,6 +138,7 @@ The key insight: we don't need to prevent ALL network access. We need to ensure 
 ```
 
 Implementation:
+
 1. Run container with `--network=none`
 2. Use a sidecar proxy or socat to forward broker traffic only
 3. OR: create a custom Docker network with iptables rules allowing only broker IP
@@ -147,7 +158,7 @@ For each skill execution, the broker should issue a **scoped token** that:
 ### Token Flow
 
 ```
-Agent → Broker: "I need a scoped token for skill 'weather-lookup' 
+Agent → Broker: "I need a scoped token for skill 'weather-lookup'
                  with capabilities: [custom/openweathermap-api-key]
                  TTL: 30s"
 

@@ -374,8 +374,8 @@ seksbot pairing list feishu
 
 ## Gateway management commands
 
-| Command                    | Description                   |
-| -------------------------- | ----------------------------- |
+| Command                   | Description                   |
+| ------------------------- | ----------------------------- |
 | `seksbot gateway status`  | Show gateway status           |
 | `seksbot gateway install` | Install/start gateway service |
 | `seksbot gateway stop`    | Stop gateway service          |

@@ -11,10 +11,10 @@ import { buildGatewayConnectionDetails, callGateway } from "../gateway/call.js";
 import { normalizeControlUiBasePath } from "../gateway/control-ui-shared.js";
 import { probeGateway } from "../gateway/probe.js";
 import { collectChannelStatusIssues } from "../infra/channels-status-issues.js";
-import { resolveseksbotPackageRoot } from "../infra/seksbot-root.js";
 import { resolveOsSummary } from "../infra/os-summary.js";
 import { inspectPortUsage } from "../infra/ports.js";
 import { readRestartSentinel } from "../infra/restart-sentinel.js";
+import { resolveseksbotPackageRoot } from "../infra/seksbot-root.js";
 import { getRemoteSkillEligibility } from "../infra/skills-remote.js";
 import { readTailscaleStatusJson } from "../infra/tailscale.js";
 import {

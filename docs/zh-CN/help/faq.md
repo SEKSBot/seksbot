@@ -1149,9 +1149,9 @@ seksbot 还会运行**静默的预压缩记忆刷新**，以提醒模型在自�
 
 所有内容位于 `$SEKSBOT_STATE_DIR`（默认：`~/.seksbot`）下：
 
-| 路径                                                            | 用途                                                 |
-| --------------------------------------------------------------- | ---------------------------------------------------- |
-| `$SEKSBOT_STATE_DIR/seksbot.json`                             | 主配置（JSON5）                                      |
+| 路径                                                           | 用途                                                 |
+| -------------------------------------------------------------- | ---------------------------------------------------- |
+| `$SEKSBOT_STATE_DIR/seksbot.json`                              | 主配置（JSON5）                                      |
 | `$SEKSBOT_STATE_DIR/credentials/oauth.json`                    | 旧版 OAuth 导入（首次使用时复制到认证配置文件）      |
 | `$SEKSBOT_STATE_DIR/agents/<agentId>/agent/auth-profiles.json` | 认证配置文件（OAuth + API 密钥）                     |
 | `$SEKSBOT_STATE_DIR/agents/<agentId>/agent/auth.json`          | 运行时认证缓存（自动管理）                           |

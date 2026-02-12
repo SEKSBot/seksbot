@@ -37,11 +37,16 @@ afterEach(() => {
 describe("scanSkillsDir", () => {
   it("loads skills from a directory", () => {
     const dir = makeTmpDir();
-    writeSkill(dir, "skill-a", {
-      name: "skill-a",
-      description: "First skill",
-      capabilities: ["anthropic/messages.create"],
-    }, "# Skill A\nDo things.");
+    writeSkill(
+      dir,
+      "skill-a",
+      {
+        name: "skill-a",
+        description: "First skill",
+        capabilities: ["anthropic/messages.create"],
+      },
+      "# Skill A\nDo things.",
+    );
 
     writeSkill(dir, "skill-b", {
       name: "skill-b",
@@ -52,7 +57,9 @@ describe("scanSkillsDir", () => {
     const skills = scanSkillsDir(dir);
     expect(skills).toHaveLength(2);
     expect(skills.map((s) => s.manifest.name).sort()).toEqual(["skill-a", "skill-b"]);
-    expect(skills.find((s) => s.manifest.name === "skill-a")?.skillMd).toBe("# Skill A\nDo things.");
+    expect(skills.find((s) => s.manifest.name === "skill-a")?.skillMd).toBe(
+      "# Skill A\nDo things.",
+    );
     expect(skills.find((s) => s.manifest.name === "skill-b")?.skillMd).toBe("");
   });
 

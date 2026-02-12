@@ -8,14 +8,14 @@ The integration test workflow (`integration-test.yml`) spins up a seksbot contai
 
 Configure these in the repo's GitHub Settings → Secrets:
 
-| Secret | Description |
-|--------|-------------|
-| `TEST_DISCORD_BOT_TOKEN` | Discord bot token for the test bot |
-| `TEST_DISCORD_GUILD_ID` | Guild ID where tests run |
-| `TEST_DISCORD_CHANNEL_ID` | Channel ID for test messages (e.g., `#integration-test`) |
-| `TEST_DISCORD_ADMIN_ID` | Discord user ID allowed to interact with the bot |
-| `SEKS_BROKER_URL` | SEKS broker URL (e.g., `https://seks-broker.stcredzero.workers.dev`) |
-| `SEKS_AGENT_TOKEN` | Agent token for the test bot's broker access |
+| Secret                    | Description                                                          |
+| ------------------------- | -------------------------------------------------------------------- |
+| `TEST_DISCORD_BOT_TOKEN`  | Discord bot token for the test bot                                   |
+| `TEST_DISCORD_GUILD_ID`   | Guild ID where tests run                                             |
+| `TEST_DISCORD_CHANNEL_ID` | Channel ID for test messages (e.g., `#integration-test`)             |
+| `TEST_DISCORD_ADMIN_ID`   | Discord user ID allowed to interact with the bot                     |
+| `SEKS_BROKER_URL`         | SEKS broker URL (e.g., `https://seks-broker.stcredzero.workers.dev`) |
+| `SEKS_AGENT_TOKEN`        | Agent token for the test bot's broker access                         |
 
 ## Setup
 
@@ -38,11 +38,13 @@ Create a scoped agent token in the broker for the test bot with minimal capabili
 ## Running
 
 ### Manual trigger
+
 ```bash
 gh workflow run integration-test.yml
 ```
 
 ### Automatic
+
 Uncomment the `push` trigger in the workflow to run on every push to main.
 
 ## What It Tests

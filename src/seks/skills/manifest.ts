@@ -186,7 +186,10 @@ function validateManifest(obj: Record<string, unknown>): ManifestParseResult {
 export function parseManifest(dirPath: string): ManifestParseResult {
   const manifestPath = findManifestPath(dirPath);
   if (!manifestPath) {
-    return { ok: false, error: `no manifest file found in ${dirPath} (expected ${MANIFEST_FILENAMES.join(" or ")})` };
+    return {
+      ok: false,
+      error: `no manifest file found in ${dirPath} (expected ${MANIFEST_FILENAMES.join(" or ")})`,
+    };
   }
 
   let raw: string;

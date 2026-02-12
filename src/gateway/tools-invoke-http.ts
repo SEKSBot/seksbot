@@ -1,11 +1,11 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createseksbotTools } from "../agents/seksbot-tools.js";
 import {
   filterToolsByPolicy,
   resolveEffectiveToolPolicy,
   resolveGroupToolPolicy,
   resolveSubagentToolPolicy,
 } from "../agents/pi-tools.policy.js";
+import { createseksbotTools } from "../agents/seksbot-tools.js";
 import {
   buildPluginToolGroups,
   collectExplicitAllowlist,
@@ -169,9 +169,7 @@ export async function handleToolsInvokeHttpRequest(
     !rawSessionKey || rawSessionKey === "main" ? resolveMainSessionKey(cfg) : rawSessionKey;
 
   // Resolve message channel/account hints (optional headers) for policy inheritance.
-  const messageChannel = normalizeMessageChannel(
-    getHeader(req, "x-seksbot-message-channel") ?? "",
-  );
+  const messageChannel = normalizeMessageChannel(getHeader(req, "x-seksbot-message-channel") ?? "");
   const accountId = getHeader(req, "x-seksbot-account-id")?.trim() || undefined;
 
   const {

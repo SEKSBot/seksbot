@@ -39,9 +39,7 @@ describe("argv helpers", () => {
     expect(getFlagValue(["node", "seksbot", "status", "--timeout", "5000"], "--timeout")).toBe(
       "5000",
     );
-    expect(getFlagValue(["node", "seksbot", "status", "--timeout=2500"], "--timeout")).toBe(
-      "2500",
-    );
+    expect(getFlagValue(["node", "seksbot", "status", "--timeout=2500"], "--timeout")).toBe("2500");
     expect(getFlagValue(["node", "seksbot", "status", "--timeout"], "--timeout")).toBeNull();
     expect(getFlagValue(["node", "seksbot", "status", "--timeout", "--json"], "--timeout")).toBe(
       null,
