@@ -17,6 +17,7 @@ SEKSBot/seksbot            ← our hard fork (rebranded, diverged)
 In GitHub UI: **SEKSBot/openclaw → Sync fork → Update branch**
 
 Or via CLI:
+
 ```bash
 cd ~/openclaw  # local clone of SEKSBot/openclaw
 git fetch upstream
@@ -28,11 +29,13 @@ git push origin main
 ## Step 2: Rebuild the Rebranded Mirror
 
 From a working clone of SEKSBot/seksbot:
+
 ```bash
 ./scripts/upstream-sync.sh rebuild
 ```
 
 This:
+
 1. Fetches upstream/main (from openclaw/openclaw)
 2. Creates/updates `upstream-rebranded` branch with branding transform applied
 3. Switches back to your branch
@@ -40,12 +43,14 @@ This:
 ## Step 3: Cherry-pick or Merge
 
 ### Cherry-pick specific fixes:
+
 ```bash
 git log --oneline upstream-rebranded  # browse available commits
 ./scripts/upstream-sync.sh pick <commit-hash>
 ```
 
 ### Full merge (catching up on many commits):
+
 ```bash
 git checkout -b sync/upstream-YYYY-MM-DD main
 git merge upstream-rebranded
@@ -56,6 +61,7 @@ git merge upstream-rebranded
 ## What the Transform Does
 
 The branding sed replaces:
+
 - `openclaw` → `seksbot`
 - `OpenClaw` → `seksbot`
 - `OPENCLAW` → `SEKSBOT`
@@ -67,6 +73,7 @@ The branding sed replaces:
 ## Areas We Own (Skip Upstream Changes)
 
 These areas have diverged intentionally — don't sync them:
+
 - **Skills system** — deprecated in favor of SEKS broker
 - **Auth/config** — replacing with SEKS broker
 - **CI workflows** — we removed inherited ones
