@@ -1,0 +1,21 @@
+# seksbot Skill Manifest
+# See docs/dev/skills-format.md for the full spec.
+
+version: 1
+name: example-skill
+description: An example skill showing the seksbot skill manifest format
+emoji: "📘"
+author: FootGun
+
+# Capabilities this skill requires.
+# The SEKS broker enforces these — the skill only gets access to what's declared here.
+# API capabilities: "provider/endpoint" (broker injects the real key)
+# Custom secrets: "custom/key-name" (retrieved via seksh or broker)
+capabilities:
+  - anthropic/messages.create
+  - custom/example-api-key
+
+# Container execution spec (optional — defaults are sensible)
+container_network: broker-only
+container_timeout: 120
+container_memory: 256m
