@@ -44,7 +44,9 @@ export async function resolveDiscordTokenAsync(
         }
       }
     } catch (error) {
-      console.warn(`Failed to fetch Discord token from SEKS broker: ${error}`);
+      console.warn(
+        `Failed to fetch Discord token from SEKS broker: ${error instanceof Error ? error.message : String(error)}`,
+      );
       // Fall through to regular resolution
     }
   }

@@ -1,9 +1,9 @@
 import { type Api, getEnvApiKey, type Model } from "@mariozechner/pi-ai";
 import path from "node:path";
 import type { seksbotConfig } from "../config/config.js";
-import { loadConfig } from "../config/config.js";
 import type { ModelProviderAuthMode, ModelProviderConfig } from "../config/types.js";
 import { formatCliCommand } from "../cli/command-format.js";
+import { loadConfig } from "../config/config.js";
 import { getShellEnvAppliedKeys } from "../infra/shell-env.js";
 import { BrokerClient } from "../seks/broker-client.js";
 import {
@@ -43,11 +43,7 @@ function createBrokerClientIfConfigured(cfg?: seksbotConfig): BrokerClient | und
   if (!brokerConfig?.url) {
     return undefined;
   }
-  return new BrokerClient(
-    brokerConfig.url,
-    brokerConfig.token,
-    brokerConfig.tokenCommand
-  );
+  return new BrokerClient(brokerConfig.url, brokerConfig.token, brokerConfig.tokenCommand);
 }
 
 const AWS_BEARER_ENV = "AWS_BEARER_TOKEN_BEDROCK";
@@ -186,7 +182,9 @@ export async function resolveApiKeyForProvider(params: {
       };
     } catch (error) {
       // Log error but fall back to normal auth flow
-      console.warn(`SEKS broker auth failed: ${error}`);
+      console.warn(
+        `SEKS broker auth failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
