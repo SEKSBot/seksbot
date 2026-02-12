@@ -1,4 +1,6 @@
-# OpenClaw (iOS)
+# seksbot (iOS)
+
+> Inherited from OpenClaw. App naming/branding not yet updated.
 
 This is an **alpha** iOS app that connects to an OpenClaw Gateway as a `role: node`.
 

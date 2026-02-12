@@ -1,48 +1,38 @@
 # Security Policy
 
-If you believe you've found a security issue in OpenClaw, please report it privately.
+If you believe you've found a security issue in seksbot, please report it privately.
 
 ## Reporting
 
-For full reporting instructions - including which repo to report to and how - see our [Trust page](https://trust.seksbot.ai).
+Open a [GitHub Security Advisory](https://github.com/SEKSBot/seksbot/security/advisories/new) or email the maintainers directly.
 
 Include: reproduction steps, impact assessment, and (if possible) a minimal PoC.
 
-## Security & Trust
-
-**Jamieson O'Reilly** ([@theonejvo](https://twitter.com/theonejvo)) is Security & Trust at OpenClaw. Jamieson is the founder of [Dvuln](https://dvuln.com) and brings extensive experience in offensive security, penetration testing, and security program development.
+**For issues in the core runtime** (inherited from OpenClaw): please also report upstream at the [OpenClaw Trust page](https://trust.openclaw.ai).
 
 ## Bug Bounties
 
-OpenClaw is a labor of love. There is no bug bounty program and no budget for paid reports. Please still disclose responsibly so we can fix issues quickly.
-The best way to help the project right now is by sending PRs.
+There is no bug bounty program at this time. Please still disclose responsibly so we can fix issues quickly. PRs welcome.
 
 ## Out of Scope
 
-- Public Internet Exposure
-- Using OpenClaw in ways that the docs recommend not to
+- Public internet exposure (seksbot is designed for local/tailnet use)
 - Prompt injection attacks
+- Using seksbot in ways the docs recommend against
 
 ## Operational Guidance
 
-For threat model + hardening guidance (including `openclaw security audit --deep` and `--fix`), see:
-
-- `https://docs.seksbot.ai/gateway/security`
+For threat model and hardening guidance, see the [OpenClaw security docs](https://docs.openclaw.ai/gateway/security) (applies to seksbot).
 
 ### Web Interface Safety
 
-OpenClaw's web interface is intended for local use only. Do **not** bind it to the public internet; it is not hardened for public exposure.
+The web interface is intended for local use only. Do **not** bind it to the public internet.
 
 ## Runtime Requirements
 
 ### Node.js Version
 
-OpenClaw requires **Node.js 22.12.0 or later** (LTS). This version includes important security patches:
-
-- CVE-2025-59466: async_hooks DoS vulnerability
-- CVE-2026-21636: Permission model bypass vulnerability
-
-Verify your Node.js version:
+seksbot requires **Node.js 22.12.0 or later** (LTS).
 
 ```bash
 node --version  # Should be v22.12.0 or later
@@ -50,26 +40,15 @@ node --version  # Should be v22.12.0 or later
 
 ### Docker Security
 
-When running OpenClaw in Docker:
+When running in Docker:
 
-1. The official image runs as a non-root user (`node`) for reduced attack surface
-2. Use `--read-only` flag when possible for additional filesystem protection
+1. The image runs as a non-root user (`node`)
+2. Use `--read-only` flag when possible
 3. Limit container capabilities with `--cap-drop=ALL`
-
-Example secure Docker run:
-
-```bash
-docker run --read-only --cap-drop=ALL \
-  -v openclaw-data:/app/data \
-  openclaw/openclaw:latest
-```
 
 ## Security Scanning
 
 This project uses `detect-secrets` for automated secret detection in CI/CD.
-See `.detect-secrets.cfg` for configuration and `.secrets.baseline` for the baseline.
-
-Run locally:
 
 ```bash
 pip install detect-secrets==1.5.0

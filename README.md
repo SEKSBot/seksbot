@@ -1,4 +1,4 @@
-# 🦞 seksbot
+# seksbot
 
 <p align="center">
   <strong>Secure Environment for Key Services</strong>

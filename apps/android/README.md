@@ -1,4 +1,6 @@
-## OpenClaw Node (Android) (internal)
+## seksbot Node (Android) (internal)
+
+> Inherited from OpenClaw. App naming/branding not yet updated.
 
 Modern Android node app: connects to the **Gateway WebSocket** (`_openclaw-gw._tcp`) and exposes **Canvas + Chat + Camera**.
 
