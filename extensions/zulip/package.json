@@ -1,0 +1,14 @@
+{
+  "name": "@seksbot/zulip",
+  "version": "2026.2.12",
+  "description": "seksbot Zulip channel plugin",
+  "type": "module",
+  "devDependencies": {
+    "seksbot": "workspace:*"
+  },
+  "seksbot": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
