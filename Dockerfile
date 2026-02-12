@@ -24,7 +24,7 @@ COPY scripts ./scripts
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN OPENCLAW_A2UI_SKIP_MISSING=1 pnpm build
+RUN SEKSBOT_A2UI_SKIP_MISSING=1 pnpm build
 # Force pnpm for UI build (Bun may fail on ARM/Synology architectures)
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
@@ -43,6 +43,6 @@ USER node
 # Binds to loopback (127.0.0.1) by default for security.
 #
 # For container platforms requiring external health checks:
-#   1. Set OPENCLAW_GATEWAY_TOKEN or OPENCLAW_GATEWAY_PASSWORD env var
+#   1. Set SEKSBOT_GATEWAY_TOKEN or SEKSBOT_GATEWAY_PASSWORD env var
 #   2. Override CMD: ["node","openclaw.mjs","gateway","--allow-unconfigured","--bind","lan"]
 CMD ["node", "openclaw.mjs", "gateway", "--allow-unconfigured"]
