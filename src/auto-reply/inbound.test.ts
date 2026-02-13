@@ -311,7 +311,7 @@ describe("mention helpers", () => {
   });
 
   it("normalizes zero-width characters", () => {
-    expect(normalizeMentionText("open\u200bclaw")).toBe("seksbot");
+    expect(normalizeMentionText("seks\u200bbot")).toBe("seksbot");
   });
 
   it("matches patterns case-insensitively", () => {

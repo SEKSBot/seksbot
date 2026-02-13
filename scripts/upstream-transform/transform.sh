@@ -76,7 +76,7 @@ apply_sed() {
   local description="$2"
   
   if $DRY_RUN; then
-    count=$(grep -rl "$pattern" --include="*.ts" --include="*.md" --include="*.json" --include="*.js" --include="*.mjs" . 2>/dev/null | wc -l | tr -d ' ')
+    count=$(grep -rl "$pattern" --include="*.ts" --include="*.md" --include="*.json" --include="*.js" --include="*.mjs" . 2>/dev/null | wc -l | tr -d ' '; exit 0)
     echo "  $description: $count files would change"
   else
     find . \( -name '*.ts' -o -name '*.md' -o -name '*.json' -o -name '*.js' -o -name '*.mjs' \) \
@@ -96,6 +96,88 @@ apply_sed 's/OPENCLAW/SEKSBOT/g' "OPENCLAW → SEKSBOT (uppercase)"
 apply_sed 's/open-claw/seksbot/g' "open-claw → seksbot (kebab)"
 apply_sed 's/clawdbot/seksbot/g' "clawdbot → seksbot"
 apply_sed 's/Clawdbot/Seksbot/g' "Clawdbot → Seksbot"
+
+# Zero-width character variants (tests embed ZWC in brand names)
+apply_sed 's/open\\u200bclaw/seks\\u200bbot/g' "openclaw with ZWC in tests"
+
+# ─── Remove upstream-only CI workflows ───────────────────────────
+# These test upstream infrastructure (installers, etc.) that we don't use.
+
+echo ""
+echo "=== Remove upstream-only CI workflows ==="
+
+REMOVE_WORKFLOWS=(
+  ".github/workflows/install-smoke.yml"
+)
+
+for wf in "${REMOVE_WORKFLOWS[@]}"; do
+  if [ -f "$wf" ]; then
+    if $DRY_RUN; then
+      echo "  Would remove: $wf"
+    else
+      rm -f "$wf"
+      echo "  ✅ Removed $wf"
+    fi
+  else
+    echo "  $wf already removed"
+  fi
+done
+
+# ─── Skills deprecation ─────────────────────────────────────────
+# Remove all bundled OpenClaw skills (restored by upstream sync).
+# Our skills framework uses skill.yaml manifests + containerized execution.
+
+echo ""
+echo "=== Skills deprecation ==="
+
+# List of upstream skill directories to remove (everything except our custom ones)
+SKILLS_KEEP="example-skill"
+SKILLS_DIR="./skills"
+
+if [ -d "$SKILLS_DIR" ]; then
+  removed=0
+  for skill_dir in "$SKILLS_DIR"/*/; do
+    skill_name="$(basename "$skill_dir")"
+    # Keep our custom skills
+    case "$skill_name" in
+      $SKILLS_KEEP) continue ;;
+    esac
+    if $DRY_RUN; then
+      echo "  Would remove: skills/$skill_name/"
+      removed=$((removed + 1))
+    else
+      rm -rf "$skill_dir"
+      removed=$((removed + 1))
+    fi
+  done
+  echo "  ✅ Removed $removed upstream skill directories"
+else
+  echo "  (no skills/ directory found)"
+fi
+
+# Stub out skills engine files if upstream restores them
+SKILLS_STUBS=(
+  "src/infra/skills-remote.ts"
+  "src/security/skill-scanner.ts"
+  "src/agents/skills-status.ts"
+  "src/agents/skills-install.ts"
+)
+
+for stub_target in "${SKILLS_STUBS[@]}"; do
+  stub_name="$(basename "$stub_target")"
+  if [ -f "./$stub_target" ]; then
+    if ! head -1 "./$stub_target" | grep -q "DEPRECATED"; then
+      if $DRY_RUN; then
+        echo "  Would stub: $stub_target"
+      else
+        cp "$SCRIPT_DIR/stubs/$stub_name" "./$stub_target"
+        echo "  ✅ Stubbed $stub_target"
+      fi
+    else
+      echo "  $stub_target already stubbed"
+    fi
+  fi
+done
 
 # ─── Auto-format (oxfmt) ────────────────────────────────────────
 
