@@ -100,6 +100,29 @@ apply_sed 's/Clawdbot/Seksbot/g' "Clawdbot → Seksbot"
 # Zero-width character variants (tests embed ZWC in brand names)
 apply_sed 's/open\\u200bclaw/seks\\u200bbot/g' "openclaw with ZWC in tests"
 
+# ─── Remove upstream-only CI workflows ───────────────────────────
+# These test upstream infrastructure (installers, etc.) that we don't use.
+
+echo ""
+echo "=== Remove upstream-only CI workflows ==="
+
+REMOVE_WORKFLOWS=(
+  ".github/workflows/install-smoke.yml"
+)
+
+for wf in "${REMOVE_WORKFLOWS[@]}"; do
+  if [ -f "$wf" ]; then
+    if $DRY_RUN; then
+      echo "  Would remove: $wf"
+    else
+      rm -f "$wf"
+      echo "  ✅ Removed $wf"
+    fi
+  else
+    echo "  $wf already removed"
+  fi
+done
+
 # ─── Skills deprecation ─────────────────────────────────────────
 # Remove all bundled OpenClaw skills (restored by upstream sync).
 # Our skills framework uses skill.yaml manifests + containerized execution.
