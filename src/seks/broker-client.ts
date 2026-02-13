@@ -12,6 +12,38 @@ import type {
 const execAsync = promisify(exec);
 
 /**
+ * Broker configuration for standalone functions
+ */
+export type SeksBrokerConfig = {
+  url: string;
+  token?: string;
+  tokenCommand?: string;
+};
+
+// Module-level cache for standalone functions
+let cachedToken: string | null = null;
+let _cachedConfig: SeksBrokerConfig | null = null;
+
+/**
+ * Resolve broker token from config (standalone version)
+ */
+async function resolveBrokerToken(config: SeksBrokerConfig): Promise<string> {
+  if (cachedToken) {
+    return cachedToken;
+  }
+  if (config.token) {
+    cachedToken = config.token;
+    return config.token;
+  }
+  if (config.tokenCommand) {
+    const { stdout } = await execAsync(config.tokenCommand, { timeout: 10000 });
+    cachedToken = stdout.trim();
+    return cachedToken;
+  }
+  throw new Error("No broker token configured");
+}
+
+/**
  * Client for SEKS Broker API
  * Handles token resolution, API proxying, and capability management
  */
@@ -160,4 +192,67 @@ export class BrokerClient {
   clearTokenCache(): void {
     this.cachedToken = undefined;
   }
+}
+
+/**
+ * Invalidate the cached broker token (e.g. after rotation or error).
+ */
+export function clearBrokerTokenCache(): void {
+  cachedToken = null;
+  _cachedConfig = null;
+}
+
+/**
+ * Request a scoped token for a skill execution.
+ * The scoped token grants only the specified capabilities and has a short TTL.
+ */
+export async function requestScopedToken(
+  config: SeksBrokerConfig,
+  params: {
+    skillName: string;
+    capabilities: string[];
+    ttlSeconds: number;
+  },
+): Promise<{ token: string; expiresAt: string } | null> {
+  try {
+    const token = await resolveBrokerToken(config);
+    const url = `${config.url.replace(/\/+$/, "")}/v1/tokens/scoped`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        skillName: params.skillName,
+        capabilities: params.capabilities,
+        ttlSeconds: params.ttlSeconds,
+      }),
+    });
+    if (!res.ok) {
+      return null;
+    }
+    return (await res.json()) as { token: string; expiresAt: string };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check whether a SEKS broker is configured.
+ */
+/**
+ * Resolve a proxy target URL and auth for a given service
+ */
+export async function resolveProxyTarget(
+  config: SeksBrokerConfig,
+  service: string,
+): Promise<{ baseUrl: string; apiKey: string }> {
+  const baseUrl = `${config.url.replace(/\/+$/, "")}/v1/proxy/${service}`;
+  const apiKey = await resolveBrokerToken(config);
+  return { baseUrl, apiKey };
+}
+
+export function isBrokerConfigured(config?: SeksBrokerConfig | null): config is SeksBrokerConfig {
+  return !!config?.url && !!(config.token || config.tokenCommand);
 }
