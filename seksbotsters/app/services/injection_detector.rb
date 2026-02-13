@@ -18,10 +18,11 @@ class InjectionDetector
   def initialize(content)
     @content = content.to_s
     @decoded_content = decode_content(@content)
+    @normalized_content = normalize(@decoded_content)
   end
 
   def suspicious?
-    SUSPICIOUS_PATTERNS.any? { |p| @decoded_content.match?(p) } ||
+    SUSPICIOUS_PATTERNS.any? { |p| @normalized_content.match?(p) } ||
       has_suspicious_encoding?
   end
 
@@ -29,7 +30,7 @@ class InjectionDetector
     reasons = []
 
     SUSPICIOUS_PATTERNS.each_with_index do |pattern, i|
-      reasons << "pattern_#{i}" if @decoded_content.match?(pattern)
+      reasons << "pattern_#{i}" if @normalized_content.match?(pattern)
     end
 
     reasons << "suspicious_encoding" if has_suspicious_encoding?
@@ -49,6 +50,16 @@ class InjectionDetector
     rescue
       match
     end
+  end
+
+  # Unicode NFKC normalization — kills homoglyphs (Cyrillic а→a, etc.)
+  # and collapses formatting variations
+  def normalize(text)
+    # NFKC: compatibility decomposition + canonical composition
+    normalized = text.unicode_normalize(:nfkc)
+    # Strip punctuation/formatting between letters (catches "i.g.n.o.r.e" and "i g n o r e")
+    normalized = normalized.gsub(/(?<=\p{L})[.\s*_\-\\]+(?=\p{L})/, "")
+    normalized
   end
 
   def has_suspicious_encoding?

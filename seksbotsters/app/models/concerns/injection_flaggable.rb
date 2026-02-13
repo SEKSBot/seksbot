@@ -10,9 +10,12 @@ module InjectionFlaggable
     scope :injection_flagged, -> { where("injection_flag_count > 0") }
   end
 
+  # Configurable threshold: how many flags before content is hidden
+  INJECTION_HIDE_THRESHOLD = 2
+
   def visible_to?(user)
     return true unless injection_hidden?
-    return true if user.nil? # Logged-out users see everything (presumably human)
+    return false if user.nil? # Logged-out users can't see flagged content (bots browse without auth)
     return true unless user.is_ai_user?
     return true if user.verified_human?
 

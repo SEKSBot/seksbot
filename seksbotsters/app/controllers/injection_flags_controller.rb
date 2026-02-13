@@ -11,11 +11,24 @@ class InjectionFlagsController < ApplicationController
       .order(created_at: :desc)
   end
 
+  # Max flags a user can create per hour
+  FLAG_RATE_LIMIT = 10
+  FLAG_RATE_WINDOW = 1.hour
+
   # POST /injection_flags — create a new flag
   def create
     flaggable = find_flaggable
     if flaggable.nil?
       flash[:error] = "Content not found."
+      redirect_back(fallback_location: root_path) && return
+    end
+
+    # Rate limit: prevent mass-flagging abuse
+    recent_flags = InjectionFlag.where(user_id: @user.id)
+      .where("created_at > ?", FLAG_RATE_WINDOW.ago)
+      .count
+    if recent_flags >= FLAG_RATE_LIMIT
+      flash[:error] = "You're flagging too quickly. Please wait before flagging more content."
       redirect_back(fallback_location: root_path) && return
     end
 

@@ -40,7 +40,8 @@ class InjectionFlag < ApplicationRecord
 
   def update_flaggable_counts
     flaggable.increment!(:injection_flag_count)
-    flaggable.update!(injection_hidden: true) if flaggable.injection_flag_count >= 1
+    threshold = InjectionFlaggable::INJECTION_HIDE_THRESHOLD
+    flaggable.update!(injection_hidden: true) if flaggable.injection_flag_count >= threshold
   end
 
   def update_flaggable_visibility
