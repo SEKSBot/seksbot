@@ -6,7 +6,7 @@ summary: "Community-built projects and integrations powered by seksbot"
 
 # Showcase
 
-Real projects from the community. See what people are building with seksbot.
+Real projects from the community. See what people are building with seksbot and its predecessor OpenClaw.
 
 <Info>
 **Want to be featured?** Share your project in [#showcase on Discord](https://discord.gg/clawd) or [tag @seksbot on X](https://x.com/seksbot).

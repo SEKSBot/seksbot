@@ -5,7 +5,7 @@ read_when:
 title: "seksbot"
 ---
 
-# seksbot 🦞
+# seksbot
 
 <p align="center">
     <img
@@ -22,11 +22,9 @@ title: "seksbot"
     />
 </p>
 
-> _"EXFOLIATE! EXFOLIATE!"_ — A space lobster, probably
-
 <p align="center">
-  <strong>Any OS gateway for AI agents across WhatsApp, Telegram, Discord, iMessage, and more.</strong><br />
-  Send a message, get an agent response from your pocket. Plugins add Mattermost and more.
+  <strong>Secure agent infrastructure for any OS — WhatsApp, Telegram, Discord, iMessage, and more.</strong><br />
+  A hard fork of OpenClaw focused on the SEKS Broker, seksh, and credential isolation.
 </p>
 
 <Columns>
@@ -43,12 +41,13 @@ title: "seksbot"
 
 ## What is seksbot?
 
-seksbot is a **self-hosted gateway** that connects your favorite chat apps — WhatsApp, Telegram, Discord, iMessage, and more — to AI coding agents like Pi. You run a single Gateway process on your own machine (or a server), and it becomes the bridge between your messaging apps and an always-available AI assistant.
+seksbot is a **hard fork of [OpenClaw](https://github.com/openclaw/openclaw)** rebuilt around secure agent infrastructure. It connects your favorite chat apps — WhatsApp, Telegram, Discord, iMessage, and more — to AI coding agents, with the **SEKS Broker** handling credential isolation and **seksh** providing a hardened agent shell. You run a single Gateway process on your own machine (or a server), and it becomes the bridge between your messaging apps and an always-available AI assistant.
 
-**Who is it for?** Developers and power users who want a personal AI assistant they can message from anywhere — without giving up control of their data or relying on a hosted service.
+**Who is it for?** Developers and power users who want a personal AI assistant they can message from anywhere — with strong security boundaries and without giving up control of their data.
 
 **What makes it different?**
 
+- **Security-first**: SEKS Broker for credential isolation, seksh for hardened agent shells
 - **Self-hosted**: runs on your hardware, your rules
 - **Multi-channel**: one Gateway serves WhatsApp, Telegram, Discord, and more simultaneously
 - **Agent-native**: built for coding agents with tool use, sessions, memory, and multi-agent routing

@@ -5,9 +5,11 @@ read_when:
 title: "seksbot Lore"
 ---
 
-# The Lore of seksbot 🦞📖
+# The Lore of seksbot 📖
 
-_A tale of lobsters, molting shells, and too many tokens._
+> **Note:** This lore was inherited from OpenClaw and its community. seksbot is a hard fork — the history below reflects the original project's culture and naming journey.
+
+_A tale of rebrands, molting shells, and too many tokens._
 
 ## The Origin Story
 
