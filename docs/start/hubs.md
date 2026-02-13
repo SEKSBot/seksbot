@@ -5,7 +5,7 @@ read_when:
 title: "Docs Hubs"
 ---
 
-# Docs hubs
+# Docs Hubs
 
 <Note>
 If you are new to seksbot, start with [Getting Started](/start/getting-started).
