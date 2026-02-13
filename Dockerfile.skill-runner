@@ -1,0 +1,29 @@
+# Dockerfile.skill-runner — Purpose-built base image for seksbot containerized skills
+#
+# Skills run as isolated sub-agents with broker-only networking.
+# No secrets are baked in — everything arrives via env vars at runtime:
+#   SEKS_AGENT_TOKEN, SEKS_BROKER_URL, SEKS_SKILL_NAME, SEKS_SKILL_TASK
+#
+# Build:  docker build -f Dockerfile.skill-runner -t seksbot-skill-runner:latest .
+# Run:    (managed by seksbot skill executor — not invoked directly)
+
+FROM node:22-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --shell /bin/bash --uid 1000 skill-runner
+
+COPY scripts/skill-entrypoint.sh /usr/local/bin/skill-entrypoint.sh
+RUN chmod +x /usr/local/bin/skill-entrypoint.sh
+
+WORKDIR /skill
+
+USER skill-runner
+
+ENTRYPOINT ["skill-entrypoint.sh"]

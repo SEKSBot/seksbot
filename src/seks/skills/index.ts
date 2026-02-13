@@ -5,6 +5,9 @@
  * All external access goes through the SEKS broker or seksh.
  */
 
+/** Default container image for skill execution (built from Dockerfile.skill-runner). */
+export const DEFAULT_SKILL_RUNNER_IMAGE = "seksbot-skill-runner:latest";
+
 export type {
   ApiCapability,
   Capability,
